@@ -116,9 +116,12 @@ export class BoardComponent implements OnInit {
         this.activeSpace = this.hoverSpace;
         this.hoverSpace = undefined;
 
-        this.activeSpace.piece = this.hoverStartSpace && this.hoverStartSpace.piece;
-        if (this.hoverStartSpace) {
-            this.hoverStartSpace.piece = undefined;
+        if (this.activeSpace !== this.hoverStartSpace) {
+            this.activeSpace.piece = this.hoverStartSpace && this.hoverStartSpace.piece;
+            
+            if (this.hoverStartSpace) {
+                this.hoverStartSpace.piece = undefined;
+            }
         }
 
         event.source.element.nativeElement.classList.remove('active');

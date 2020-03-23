@@ -107,10 +107,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 
         const width = event.source.element.nativeElement.offsetWidth;
 
-        const overlayWidth = width * 1.5;
+        const overlayWidth = width * 1.75;
 
         this.x = event.pointerPosition.x - overlayWidth / 2;
-        this.y = event.pointerPosition.y - overlayWidth - width / 2;
+        this.y = event.pointerPosition.y - overlayWidth - width / 2 - 8;
         this.width = overlayWidth;
 
         this.piece = dragMovedEvent.space.piece;
