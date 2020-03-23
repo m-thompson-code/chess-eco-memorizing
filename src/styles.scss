@@ -1,1 +1,39 @@
 /* You can add global styles to this file, and also import other style files */
+@import '~normalize.css';
+
+// source: https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing
+// *, *::before, *::after {
+//     box-sizing: border-box;
+// }
+// source: https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: #cccccc;
+}
+
+.wrapper {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+}
+
+.container {
+    max-width: 1200px;
+    width: 95%;
+    height: 100%;
+    background: white;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+img {
+    display: block;
+    margin: 0;
+    padding: 0;
+}

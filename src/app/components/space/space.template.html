@@ -1,0 +1,17 @@
+<div [class]="'space' + ((space.x + space.y) % 2 ? ' odd' : ' even') + (activeSpace === space ? ' active' : '') + (hoverSpace === space ? ' hover' : '') + (hoverStartSpace === space ? ' hover-start' : '')">
+    <div class="draggable" 
+        (cdkDragStarted)="_cdkDragStartedWrapper($event)"
+        (cdkDragEnded)="_cdkDragEndedWrapper($event)"
+        (cdkDragMoved)="_cdkDragMovedWrapper($event)"
+    cdkDrag>
+
+    </div>
+
+    <div *ngIf="hoverSpace === space" class="hover-overlay">
+
+    </div>
+    <!-- {{ space.x }}, {{ space.y }}: {{ space.index }} -->
+    <div *ngIf="space.piece" class="piece">
+        <img [src]="'assets/pieces/' + space.piece + '.png'">
+    </div>
+</div>

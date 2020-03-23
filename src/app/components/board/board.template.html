@@ -1,0 +1,13 @@
+<div mooSquare class="board">
+    <div *ngFor="let row of rows; let y = index" class="row">
+        <moo-space *ngFor="let space of row; let x = index"
+        (dragStarted)="cdkDragStarted($event)"
+        (dragEnded)="cdkDragEnded($event)"
+        (dragMoved)="cdkDragMoved($event)"
+
+        [activeSpace]="activeSpace"
+        [hoverStartSpace]="hoverStartSpace"
+        [hoverSpace]="hoverSpace"
+        [space]="space"></moo-space>
+    </div>
+</div>
