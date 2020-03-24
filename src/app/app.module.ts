@@ -5,8 +5,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-// import { SquareDirective } from './directives/square-directive';
-
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 import { BoardModule } from './components/board/board.module';

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
 import { CdkDragMove, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { Space } from 'src/app/app.component';
 
@@ -25,50 +25,30 @@ export type HoverElement = HTMLElement;
     styleUrls: ['./space.style.scss']
 })
 export class SpaceComponent implements OnInit {
-    // (cdkDragStarted)="cdkDragStarted($event)"
-    // (cdkDragEnded)="cdkDragEnded($event)"
-    // (cdkDragMoved)="cdkDragMoved($event)"
+    _space: Space;
 
-    @Input() space: Space;
-    @Input() hoverStartSpace?: Space;
+    @Input()
+    set space(space: Space) {
+        if (this._space && this._space.spaceComponent === this) {
+            this._space.spaceComponent = undefined;
+        }
+
+        this._space = space;
+
+        this._space.spaceComponent = this;
+    }
+    get space(): Space {
+        return this._space;
+    };
+
+    @Input() hoverStartFromSpace?: Space;
     @Input() hoverSpace?: Space;
-    @Input() activeSpace?: Space;
-
-    @Output() dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
-    @Output() dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
-    @Output() dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter;
+    @Input() movedToSpace?: Space;
 
     constructor() {
 
     }
 
     public ngOnInit() {
-    }
-
-    public _cdkDragStartedWrapper(event: CdkDragStart<HoverElement>): void {
-        const dragStartedEvent = {
-            space: this.space,
-            cdkDragStart: event,
-        };
-        console.log('dragStarted', dragStartedEvent);
-        return this.dragStarted.emit(dragStartedEvent);
-    }
-
-    public _cdkDragMovedWrapper(event: CdkDragMove<HoverElement>): void {
-        const dragMovedEvent = {
-            space: this.space,
-            cdkDragMove: event,
-        };
-        console.log('dragMoved', dragMovedEvent);
-        return this.dragMoved.emit(dragMovedEvent);
-    }
-
-    public _cdkDragEndedWrapper(event: CdkDragEnd<HoverElement>): void {
-        const dragEndedEvent = {
-            space: this.space,
-            cdkDragEnd: event,
-        };
-        console.log('dragEnded', dragEndedEvent);
-        return this.dragEnded.emit(dragEndedEvent);
     }
 }

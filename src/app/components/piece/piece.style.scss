@@ -1,0 +1,55 @@
+.piece {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 12.5%;
+    width: 12.5%;
+
+    transition: top .25s, left .25s;
+
+    display: flex;
+    justify-content: center;
+
+    .img-container {
+        flex-grow: 1;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        transition: width .25s, height .25s, margin-bottom .25s;
+        margin: 0;
+
+        width: 100%;
+        height: 100%;
+
+        position: absolute;
+        bottom: 0;
+
+        img {
+            width: 100%;
+            height: auto;
+        }
+    }
+}
+
+.piece.dragging {
+    transition: none;
+    z-index: 5;
+}
+
+.piece.touch-dragging {
+    transition: none;
+    z-index: 5;
+
+    .img-container {
+        transition: width .25s, height .25s, margin-bottom .25s;
+        width: 150%;
+        height: 150%;
+        margin-bottom: calc(100% + 8px);
+
+        position: absolute;
+        bottom: 0;
+    }
+}

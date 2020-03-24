@@ -1,0 +1,34 @@
+.draggable-container {
+    flex-grow: 1;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.draggable {
+    width: 100%;
+    height: 100%;
+}
+
+.draggable.active {
+    z-index: 2;
+    // background:pink;
+}
+
+.hover-overlay {
+    position: absolute;
+    background: black;
+    width: 100%;
+    height: 100%;
+    opacity: .2;
+    z-index: 3;
+}
+
+.hover-overlay.touch-dragging {
+    width: 200%;
+    height: 200%;
+    border-radius: 50%;
+}

@@ -1,0 +1,5 @@
+<div #div [class]="'piece' + (piece.dragging ? ' dragging' : '') + (piece.touchDragging ? ' touch-dragging' : '')" [style.top]="piece.top" [style.left]="piece.left">
+    <div class="img-container">
+        <img [src]="'assets/pieces/' + piece.pieceName + '.png'">
+    </div>
+</div>

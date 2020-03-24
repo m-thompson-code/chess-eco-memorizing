@@ -8,60 +8,31 @@
 
     position: relative;
 }
+
 .space.odd {
     // background: #cccccc;
     background: #779556;
 }
+
 .space.even {
     // background: #ffffff;
     background: #EBECD0;
 }
-.space.hover-start {
+
+.space.hover-start-from {
     background: yellow;
     color: black;
 }
+
 .space.hover {
-    background: grey;
+    // background: grey;
     color: white;
 }
-.space.active {
+
+.space.moved-to {
     // background: darkred;
     // background: #779556;
     background: yellowgreen;
 
     color: white;
-}
-
-.draggable {
-    // background: yellowgreen;
-    // opacity: .3;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-}
-
-.draggable.active {
-    // opacity: .7;
-    // background: orange;
-    z-index: 2;
-}
-
-.hover-overlay {
-    position: absolute;
-    background: black;
-    width: 200%;
-    height: 200%;
-    opacity: .2;
-    z-index: 3;
-    border-radius: 50%;
-}
-
-.piece {
-    width: 100%;
-    height: 100%;
-
-    img {
-        width: 100%;
-        height: auto;
-    }
 }

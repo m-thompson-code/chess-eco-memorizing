@@ -1,0 +1,13 @@
+<div class="draggable-container">
+    <div class="draggable" 
+        (cdkDragStarted)="_cdkDragStartedWrapper($event)"
+        (cdkDragEnded)="_cdkDragEndedWrapper($event)"
+        (cdkDragMoved)="_cdkDragMovedWrapper($event)"
+    cdkDrag>
+
+    </div>
+
+    <div *ngIf="hoverSpace === space" [class]="'hover-overlay' + (touchDragging ? ' touch-dragging' : '')">
+
+    </div>
+</div>

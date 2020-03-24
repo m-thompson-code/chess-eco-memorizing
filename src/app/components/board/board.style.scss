@@ -1,7 +1,6 @@
 .board {
     width: 100%;
     height: auto;
-    // background: lightpink;
     display: flex;
     flex-direction: column;
 
@@ -9,16 +8,56 @@
 
     overflow: hidden;
 
+    border-radius: 4px;
+
     .row {
         height: 100%;
         display: flex;
         flex-direction: row;
         flex-grow: 1;
 
-        moo-space {
+        moo-space, moo-draggable-space {
             flex-grow: 1;
             width: 100%;
             height: 100%;
         }
+    }
+}
+
+.background-layer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.pieces-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.draggable-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.piece-container {
+    width: 12.5%;
+    height: 12.5%;
+}
+
+.drag-overlay {
+    position: fixed;
+    z-index: 3;
+
+    img {
+        width: 100%;
+        height: auto;
     }
 }

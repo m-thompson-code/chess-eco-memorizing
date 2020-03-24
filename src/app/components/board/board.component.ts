@@ -1,6 +1,27 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { Space } from 'src/app/app.component';
 import { DragMoved, DragStarted, DragEnded, HoverElement } from '../space/space.component';
+
+export interface Piece {
+    dragging: boolean;
+    touchDragging: boolean;
+    x: number;
+    y: number;
+    left: string;
+    top: string;
+    width?: string;
+    pieceName: PieceName;
+}
+
+export type BlackPieceName = 'bb' | 'bk' | 'bn' | 'bp' | 'bq' | 'br';
+export type WhitePieceName = 'wb' | 'wk' | 'wn' | 'wp' | 'wq' | 'wr';
+
+export type PieceName = BlackPieceName | WhitePieceName;
+
+export interface Coord {
+    x: number;
+    y: number;
+}
 
 @Component({
     selector: 'moo-board',
@@ -8,49 +29,109 @@ import { DragMoved, DragStarted, DragEnded, HoverElement } from '../space/space.
     styleUrls: ['./board.style.scss']
 })
 export class BoardComponent implements OnInit {
+    @Input() public rows: Space[][];
 
-    @Input() rows: Space[][];
-
-    @Output() dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
-    @Output() dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
-    @Output() dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter;
+    @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
+    @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
+    @Output() public dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter;
         
-    yDelta?: number;
-    xDelta?: number;
+    public yDelta?: number;
+    public xDelta?: number;
 
-    hoverX: number = 0;
-    hoverY: number = 0;
+    public hoverX: number = 0;
+    public hoverY: number = 0;
 
-    activeSpace?: Space;
-    hoverStartSpace?: Space;
-    hoverSpace?: Space;
+    public movedToSpace?: Space;
+    public hoverStartFromSpace?: Space;
+    public hoverSpace?: Space;
 
-    dragging: boolean;
+    @Input() public pieces: Piece[];
+    public draggingPiece: Piece;
+
+    public dragging: boolean;
+    public touchDragging: boolean;
+
+    public pointerPosition: Coord = {
+        x: 0,
+        y: 0,
+    };
 
     constructor() {
 
     }
 
     public ngOnInit() {
+        this.pointerPosition = {
+            x: 0, y: 0
+        };
     }
 
-    public updateHoverSpace(dragMoved: DragMoved): void {
-        const event = dragMoved.cdkDragMove;
+    dropPiece(piece: Piece, coords: Coord): void {
+        if (piece) {
+            piece.dragging = false;
+            piece.touchDragging = false;
+    
+            piece.left = `${coords.x * 12.5}%`;
+            piece.top = `${coords.y * 12.5}%`;
+    
+            this.draggingPiece = undefined;
+        }
+    }
+
+    dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
+        // TODO: check other pieces and drop them
+        const width = dragMovedEvent.cdkDragMove.source.element.nativeElement.offsetWidth;
+
+        if (dragMovedEvent.cdkDragMove.event.type === 'touchmove') {
+            piece.touchDragging = true;
+
+            const pointerOffsetY = dragMovedEvent.space.y * width + dragMovedEvent.cdkDragMove.distance.y + this.yDelta;
+            const pointerOffsetX = dragMovedEvent.space.x * width + dragMovedEvent.cdkDragMove.distance.x + this.xDelta;
+
+            const top = pointerOffsetY - width /2;
+            const left = pointerOffsetX - width / 2;
+
+            piece.top = `${top}px`;
+            piece.left = `${left}px`;
+        } else {
+            const spaceOffsetY = dragMovedEvent.space.y * width + dragMovedEvent.cdkDragMove.distance.y;
+            const spaceOffsetX = dragMovedEvent.space.x * width + dragMovedEvent.cdkDragMove.distance.x;
+
+            const top = spaceOffsetY;
+            const left = spaceOffsetX;
+
+            piece.top = `${top}px`;
+            piece.left = `${left}px`;
+        }
+
+        piece.dragging = true;        
+    }
+
+    public updateHoverSpace(dragMovedEvent: DragMoved): void {
+        const event = dragMovedEvent.cdkDragMove;
 
         const width = event.source.element.nativeElement.offsetWidth;
 
-        let _x = this.hoverStartSpace.x;
-        let _y = this.hoverStartSpace.y;
+        dragMovedEvent.cdkDragMove.source.element.nativeElement.offsetWidth
 
-        _x += Math.round((event.distance.x + this.xDelta) / width);
+        console.log(dragMovedEvent);
+
+        let _x = this.hoverStartFromSpace.x;
+        let _y = this.hoverStartFromSpace.y;
+
+        if (dragMovedEvent.cdkDragMove.event.type === 'touchmove') {
+            _x += Math.round((event.distance.x + this.xDelta - width / 2) / width);
+            _y += Math.round((event.distance.y + this.yDelta - width / 2) / width);
+        } else {
+            _x += Math.round(event.distance.x / width);
+            _y += Math.round(event.distance.y / width);
+        }
 
         if (_x < 0) {
             _x = 0;
         } else if (_x > 7) {
             _x = 7;
         }
-
-        _y += Math.round((event.distance.y + this.yDelta) / width);
 
         if (_y < 0) {
             _y = 0;
@@ -65,19 +146,17 @@ export class BoardComponent implements OnInit {
     }
 
     public cdkDragStarted(dragStartedEvent: DragStarted): void {
-        this.dragging = true;
-
         const event = dragStartedEvent.cdkDragStart;
 
-        console.log('cdkDragStarted');
-        console.log(event);
+        // console.log('cdkDragStarted');
+        // console.log(event);
 
         event.source.element.nativeElement.classList.add('active');
 
-        this.hoverStartSpace = dragStartedEvent.space;
+        this.hoverStartFromSpace = dragStartedEvent.space;
 
         this.hoverSpace = undefined;
-        this.activeSpace = undefined;
+        this.movedToSpace = undefined;
 
         return this.dragStarted.emit(dragStartedEvent);
     }
@@ -85,16 +164,16 @@ export class BoardComponent implements OnInit {
     public cdkDragMoved(dragMovedEvent: DragMoved): void {
         const event = dragMovedEvent.cdkDragMove;
 
-        console.log('cdkDragMoved');
-        console.log(event);
+        // console.log('cdkDragMoved');
+        // console.log(event);
 
-        const width = event.source.element.nativeElement.offsetWidth;
+        // const width = event.source.element.nativeElement.offsetWidth;
 
         if (event.pointerPosition && typeof this.xDelta === 'undefined') {
             const clientRect = event.source.element.nativeElement.getBoundingClientRect();
 
-            const xDelta = event.pointerPosition.x - clientRect.left - width / 2;
-            const yDelta = event.pointerPosition.y - clientRect.top - width / 2;
+            const xDelta = event.pointerPosition.x - clientRect.left;
+            const yDelta = event.pointerPosition.y - clientRect.top;
 
             this.xDelta = xDelta || 0;
             this.yDelta = yDelta || 0;
@@ -102,29 +181,40 @@ export class BoardComponent implements OnInit {
 
         this.updateHoverSpace(dragMovedEvent);
 
-        return this.dragMoved.emit(dragMovedEvent);
+        this.dragging = true;
+        if (dragMovedEvent.cdkDragMove.event.type === 'touchmove') {
+            this.touchDragging = true;
+        }
+
+        this.pointerPosition = event.pointerPosition;
+
+        for (let piece of this.pieces) {
+            this.draggingPiece = piece;
+            if (piece.x === dragMovedEvent.space.x && piece.y === dragMovedEvent.space.y) {
+                this.dragPiece(piece, dragMovedEvent);
+
+                return this.dragMoved.emit(dragMovedEvent);
+            }
+        }
     }
     
     public cdkDragEnded(dragEndedEvent: DragEnded): void {
         this.dragging = false;
+        this.touchDragging = false;
 
         const event = dragEndedEvent.cdkDragEnd;
 
-        console.log('cdkDragEnded');
-        console.log(event, event.distance.x, event.distance.y);
+        const width = event.source.element.nativeElement.offsetWidth;
 
-        this.activeSpace = this.hoverSpace;
+        // console.log('cdkDragEnded');
+        // console.log(event, event.distance.x, event.distance.y);
+
+        this.movedToSpace = this.hoverSpace;
         this.hoverSpace = undefined;
 
-        if (this.activeSpace !== this.hoverStartSpace) {
-            this.activeSpace.piece = this.hoverStartSpace && this.hoverStartSpace.piece;
-            
-            if (this.hoverStartSpace) {
-                this.hoverStartSpace.piece = undefined;
-            }
-        }
-
         event.source.element.nativeElement.classList.remove('active');
+
+        this.dropPiece(this.draggingPiece, this.movedToSpace);
 
         event.source.reset();
 

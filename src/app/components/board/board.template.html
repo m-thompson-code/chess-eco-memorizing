@@ -1,13 +1,30 @@
 <div mooSquare class="board">
-    <div *ngFor="let row of rows; let y = index" class="row">
-        <moo-space *ngFor="let space of row; let x = index"
-        (dragStarted)="cdkDragStarted($event)"
-        (dragEnded)="cdkDragEnded($event)"
-        (dragMoved)="cdkDragMoved($event)"
+    <div class="background-layer">
+        <div *ngFor="let row of rows; let y = index" class="row">
+            <moo-space *ngFor="let space of row; let x = index"
+            [movedToSpace]="movedToSpace"
+            [hoverStartFromSpace]="hoverStartFromSpace"
+            [hoverSpace]="hoverSpace"
+            [space]="space"></moo-space>
+        </div>
+    </div>
 
-        [activeSpace]="activeSpace"
-        [hoverStartSpace]="hoverStartSpace"
-        [hoverSpace]="hoverSpace"
-        [space]="space"></moo-space>
+    <div class="pieces-layer">
+        <div class="piece-container">
+            <moo-piece *ngFor="let piece of pieces" [piece]="piece"></moo-piece>
+        </div>
+    </div>
+    
+    <div class="draggable-layer">
+        <div *ngFor="let row of rows; let y = index" class="row">
+            <moo-draggable-space *ngFor="let space of row; let x = index"
+            (dragStarted)="cdkDragStarted($event)"
+            (dragEnded)="cdkDragEnded($event)"
+            (dragMoved)="cdkDragMoved($event)"
+    
+            [touchDragging]="touchDragging"
+            [hoverSpace]="hoverSpace"
+            [space]="space"></moo-draggable-space>
+        </div>
     </div>
 </div>

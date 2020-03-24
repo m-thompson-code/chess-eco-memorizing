@@ -2,17 +2,8 @@
     <div class="container">
         <div class="board-container">
             <div class="board-wrapper">
-
-                <moo-board #board [rows]="rows" (dragMoved)="cdkDragMoved($event)"></moo-board>
+                <moo-board #board [rows]="rows" [pieces]="pieces"></moo-board>
             </div>
         </div>
     </div>
-</div>
-
-<div *ngIf="board.dragging && piece" class="drag-overlay"
-[style.top]="y + 'px'"
-[style.left]="x + 'px'"
-[style.width]="width + 'px'"
-[style.height]="width + 'px'">
-    <img [src]="'assets/pieces/' + piece + '.png'">
 </div>
