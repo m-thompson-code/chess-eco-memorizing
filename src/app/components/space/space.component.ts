@@ -43,9 +43,11 @@ export class SpaceComponent implements OnInit {
         return this._space;
     };
 
+    @Input() activeSpace?: Space;
     @Input() hoverStartFromSpace?: Space;
     @Input() hoverSpace?: Space;
     @Input() movedToSpace?: Space;
+    @Input() movedFromSpace?: Space;
 
     constructor() {
 

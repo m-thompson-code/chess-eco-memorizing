@@ -1,8 +1,8 @@
 <div class="draggable-container">
     <div class="draggable" 
-        (cdkDragStarted)="_cdkDragStartedWrapper($event)"
-        (cdkDragEnded)="_cdkDragEndedWrapper($event)"
-        (cdkDragMoved)="_cdkDragMovedWrapper($event)"
+        (cdkDragStarted)="handleDragStarted($event)"
+        (cdkDragEnded)="handleDragEnded($event)"
+        (cdkDragMoved)="handleDragMoved($event)"
         cdkDrag>
         <!-- <ng-container *ngIf="space">
             {{ space.x }}, {{ space.y }}: {{ space.index }}

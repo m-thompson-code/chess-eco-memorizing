@@ -57,7 +57,7 @@ export class DraggableSpaceComponent implements OnInit {
     public ngOnInit() {
     }
 
-    public _cdkDragStartedWrapper(event: CdkDragStart<HoverElement>): void {
+    public handleDragStarted(event: CdkDragStart<HoverElement>): void {
         const dragStartedEvent = {
             space: this.space,
             cdkDragStart: event,
@@ -66,7 +66,7 @@ export class DraggableSpaceComponent implements OnInit {
         return this.dragStarted.emit(dragStartedEvent);
     }
 
-    public _cdkDragMovedWrapper(event: CdkDragMove<HoverElement>): void {
+    public handleDragMoved(event: CdkDragMove<HoverElement>): void {
         const dragMovedEvent = {
             space: this.space,
             cdkDragMove: event,
@@ -75,7 +75,7 @@ export class DraggableSpaceComponent implements OnInit {
         return this.dragMoved.emit(dragMovedEvent);
     }
 
-    public _cdkDragEndedWrapper(event: CdkDragEnd<HoverElement>): void {
+    public handleDragEnded(event: CdkDragEnd<HoverElement>): void {
         const dragEndedEvent = {
             space: this.space,
             cdkDragEnd: event,

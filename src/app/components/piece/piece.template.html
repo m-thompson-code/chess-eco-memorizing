@@ -1,5 +1,5 @@
-<div #div [class]="'piece' + (piece && piece.dragging ? ' dragging' : '') + (piece && piece.touchDragging ? ' touch-dragging' : '')" [style.top]="piece && piece.top || ''" [style.left]="piece && piece.left || ''">
+<div #div [class]="'piece' + (piece && piece.disableAnimations ? ' disable-animations' : '') + (piece && piece.dragging ? ' dragging' : '') + (piece && piece.touchDragging ? ' touch-dragging' : '')" [style.top]="piece && piece.top || ''" [style.left]="piece && piece.left || ''">
     <div *ngIf="piece" class="img-container">
-        <img [src]="'assets/pieces/' + (piece && piece.pieceName || 'unknown') + '.png'">
+        <img [src]="'assets/pieces/' + (piece.color || 'unknown') + '_' + (piece.pieceType || 'unknown') + '.png'">
     </div>
 </div>

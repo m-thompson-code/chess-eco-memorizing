@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Piece } from '../board/board.component';
+import { Piece } from '../../app.component';
 
 @Component({
     selector: 'moo-piece',

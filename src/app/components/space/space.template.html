@@ -1,3 +1,4 @@
-<div [class]="'space' + (((space && space.x || 0) + (space && space.y || 0)) % 2 ? ' odd' : ' even') + (movedToSpace === space ? ' active' : '') + (hoverSpace === space ? ' hover' : '') + (hoverStartFromSpace === space ? ' hover-start-from' : '')">
+<div [class]="'space' + (((space && space.x || 0) + (space && space.y || 0)) % 2 ? ' odd' : ' even') + (activeSpace === space ? ' active' : '') + (movedFromSpace === space ? ' moved-from' : '') + (movedToSpace === space ? ' moved-to' : '') + (hoverSpace === space ? ' hover' : '') + (hoverStartFromSpace === space ? ' hover-start-from' : '')">
     <!-- {{ space.x }}, {{ space.y }}: {{ space.index }} -->
+    <div *ngIf="space && space.showDot" class="dot"></div>
 </div>
