@@ -1,5 +1,5 @@
-import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
-import { Space } from 'src/app/app.component';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Space, Board } from 'src/app/app.component';
 import { DragMoved, DragStarted, DragEnded, HoverElement } from '../space/space.component';
 
 export interface Piece {
@@ -29,7 +29,8 @@ export interface Coord {
     styleUrls: ['./board.style.scss']
 })
 export class BoardComponent implements OnInit {
-    @Input() public rows: Space[][];
+    // @Input() public rows: Space[][];
+    @Input() public board?: Board;
 
     @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
     @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
@@ -45,8 +46,8 @@ export class BoardComponent implements OnInit {
     public hoverStartFromSpace?: Space;
     public hoverSpace?: Space;
 
-    @Input() public pieces: Piece[];
-    public draggingPiece: Piece;
+    // @Input() public pieces: Piece[];
+    public draggingPiece?: Piece;
 
     public dragging: boolean;
     public touchDragging: boolean;
@@ -57,7 +58,8 @@ export class BoardComponent implements OnInit {
     };
 
     constructor() {
-
+        this.dragging = false;
+        this.touchDragging = false;
     }
 
     public ngOnInit() {
@@ -70,35 +72,49 @@ export class BoardComponent implements OnInit {
         if (piece) {
             piece.dragging = false;
             piece.touchDragging = false;
-    
-            piece.left = `${coords.x * 12.5}%`;
-            piece.top = `${coords.y * 12.5}%`;
-    
+
+            if (!this.board) {
+                throw {
+                    message: "Unexpected missing board",
+                }
+            }
+
+            this.board.movePiece(piece, coords.x, coords.y);
+            
             this.draggingPiece = undefined;
         }
     }
 
     dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
+        if (!this.board) {
+            throw {
+                message: "Unexpected missing board",
+            }
+        }
         // TODO: check other pieces and drop them
+
         const width = dragMovedEvent.cdkDragMove.source.element.nativeElement.offsetWidth;
+
+        let spaceOffsetX = (this.board.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.x) : dragMovedEvent.space.x) * width;
+        let spaceOffsetY = (this.board.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.y) : dragMovedEvent.space.y) * width;
+
+        const draggedSpaceOffsetX = spaceOffsetX + dragMovedEvent.cdkDragMove.distance.x;
+        const draggedSpaceOffsetY = spaceOffsetY + dragMovedEvent.cdkDragMove.distance.y;
 
         if (dragMovedEvent.cdkDragMove.event.type === 'touchmove') {
             piece.touchDragging = true;
 
-            const pointerOffsetY = dragMovedEvent.space.y * width + dragMovedEvent.cdkDragMove.distance.y + this.yDelta;
-            const pointerOffsetX = dragMovedEvent.space.x * width + dragMovedEvent.cdkDragMove.distance.x + this.xDelta;
+            const pointerOffsetX = draggedSpaceOffsetX + (this.xDelta || 0) - width / 2;
+            const pointerOffsetY = draggedSpaceOffsetY + (this.yDelta || 0) - width / 2;
 
-            const top = pointerOffsetY - width /2;
-            const left = pointerOffsetX - width / 2;
+            const left = pointerOffsetX;
+            const top = pointerOffsetY;
 
             piece.top = `${top}px`;
             piece.left = `${left}px`;
         } else {
-            const spaceOffsetY = dragMovedEvent.space.y * width + dragMovedEvent.cdkDragMove.distance.y;
-            const spaceOffsetX = dragMovedEvent.space.x * width + dragMovedEvent.cdkDragMove.distance.x;
-
-            const top = spaceOffsetY;
-            const left = spaceOffsetX;
+            const left = draggedSpaceOffsetX;
+            const top = draggedSpaceOffsetY;
 
             piece.top = `${top}px`;
             piece.left = `${left}px`;
@@ -108,6 +124,11 @@ export class BoardComponent implements OnInit {
     }
 
     public updateHoverSpace(dragMovedEvent: DragMoved): void {
+        if (!this.board) {
+            throw {
+                message: "Unexpected missing board",
+            }
+        }
         const event = dragMovedEvent.cdkDragMove;
 
         const width = event.source.element.nativeElement.offsetWidth;
@@ -116,15 +137,26 @@ export class BoardComponent implements OnInit {
 
         console.log(dragMovedEvent);
 
-        let _x = this.hoverStartFromSpace.x;
-        let _y = this.hoverStartFromSpace.y;
+        let _x = this.hoverStartFromSpace && this.hoverStartFromSpace.x || 0;
+        let _y = this.hoverStartFromSpace && this.hoverStartFromSpace.y || 0;
+
+        let _xDelta = 0;
+        let _yDelta = 0;
 
         if (dragMovedEvent.cdkDragMove.event.type === 'touchmove') {
-            _x += Math.round((event.distance.x + this.xDelta - width / 2) / width);
-            _y += Math.round((event.distance.y + this.yDelta - width / 2) / width);
+            _xDelta = Math.round((event.distance.x + (this.xDelta || 0) - width / 2) / width);
+            _yDelta = Math.round((event.distance.y + (this.yDelta || 0) - width / 2) / width);
         } else {
-            _x += Math.round(event.distance.x / width);
-            _y += Math.round(event.distance.y / width);
+            _xDelta = Math.round(event.distance.x / width);
+            _yDelta = Math.round(event.distance.y / width);
+        }
+
+        if (this.board.boardOrientation === 'flipped') {
+            _x -= _xDelta;
+            _y -= _yDelta;
+        } else {
+            _x += _xDelta;
+            _y += _yDelta;
         }
 
         if (_x < 0) {
@@ -142,7 +174,7 @@ export class BoardComponent implements OnInit {
         this.hoverX = _x;
         this.hoverY = _y;
 
-        this.hoverSpace = this.rows[_y][_x];
+        this.hoverSpace = this.board.rows[_y][_x];
     }
 
     public cdkDragStarted(dragStartedEvent: DragStarted): void {
@@ -162,6 +194,12 @@ export class BoardComponent implements OnInit {
     }
 
     public cdkDragMoved(dragMovedEvent: DragMoved): void {
+        if (!this.board) {
+            throw {
+                message: 'Unexpected missing message',
+            }
+        }
+
         const event = dragMovedEvent.cdkDragMove;
 
         // console.log('cdkDragMoved');
@@ -188,8 +226,9 @@ export class BoardComponent implements OnInit {
 
         this.pointerPosition = event.pointerPosition;
 
-        for (let piece of this.pieces) {
+        for (let piece of this.board.pieces) {
             this.draggingPiece = piece;
+
             if (piece.x === dragMovedEvent.space.x && piece.y === dragMovedEvent.space.y) {
                 this.dragPiece(piece, dragMovedEvent);
 
@@ -204,7 +243,7 @@ export class BoardComponent implements OnInit {
 
         const event = dragEndedEvent.cdkDragEnd;
 
-        const width = event.source.element.nativeElement.offsetWidth;
+        // const width = event.source.element.nativeElement.offsetWidth;
 
         // console.log('cdkDragEnded');
         // console.log(event, event.distance.x, event.distance.y);
@@ -214,7 +253,9 @@ export class BoardComponent implements OnInit {
 
         event.source.element.nativeElement.classList.remove('active');
 
-        this.dropPiece(this.draggingPiece, this.movedToSpace);
+        if (this.draggingPiece && this.movedToSpace) {
+            this.dropPiece(this.draggingPiece, this.movedToSpace);
+        }
 
         event.source.reset();
 

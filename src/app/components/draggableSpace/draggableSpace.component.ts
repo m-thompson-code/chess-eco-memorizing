@@ -1,20 +1,20 @@
-import { Component, OnInit, Input, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CdkDragMove, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { Space } from 'src/app/app.component';
 
 export interface DragStarted<T=any> {
     cdkDragStart: CdkDragStart<T>;
-    space: Space;
+    space: Space | undefined | null;
 }
 
 export interface DragMoved<T=any> {
     cdkDragMove: CdkDragMove<T>;
-    space: Space;
+    space: Space | undefined | null;
 }
 
 export interface DragEnded<T=any> {
     cdkDragEnd: CdkDragEnd<T>;
-    space: Space;
+    space: Space | undefined | null;
 }
 
 export type HoverElement = HTMLElement;
@@ -25,24 +25,26 @@ export type HoverElement = HTMLElement;
     styleUrls: ['./draggableSpace.style.scss']
 })
 export class DraggableSpaceComponent implements OnInit {
-    private _space: Space;
+    private _space: Space | undefined | null;
 
     @Input()
-    public set space(space: Space) {
+    public set space(space: Space | undefined | null) {
         if (this._space && this._space.draggableSpaceComponent === this) {
             this._space.draggableSpaceComponent = undefined;
         }
 
         this._space = space;
 
-        this._space.draggableSpaceComponent = this;
+        if (this._space) {
+            this._space.draggableSpaceComponent = this;
+        }
     }
-    public get space(): Space {
+    public get space(): Space | undefined | null {
         return this._space;
     };
 
     @Input() public hoverSpace?: Space;
-    @Input() public touchDragging: boolean;
+    @Input() public touchDragging?: boolean;
 
     @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
     @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;

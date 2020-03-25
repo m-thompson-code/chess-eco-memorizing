@@ -1,30 +1,32 @@
 <div mooSquare class="board">
-    <div class="background-layer">
-        <div *ngFor="let row of rows; let y = index" class="row">
-            <moo-space *ngFor="let space of row; let x = index"
-            [movedToSpace]="movedToSpace"
-            [hoverStartFromSpace]="hoverStartFromSpace"
-            [hoverSpace]="hoverSpace"
-            [space]="space"></moo-space>
+    <ng-container *ngIf="board">
+        <div [class]="'background-layer' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
+            <div *ngFor="let row of board.rows; let y = index" [class]="'row' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
+                <moo-space *ngFor="let space of row; let x = index"
+                [movedToSpace]="movedToSpace"
+                [hoverStartFromSpace]="hoverStartFromSpace"
+                [hoverSpace]="hoverSpace"
+                [space]="space"></moo-space>
+            </div>
         </div>
-    </div>
-
-    <div class="pieces-layer">
-        <div class="piece-container">
-            <moo-piece *ngFor="let piece of pieces" [piece]="piece"></moo-piece>
-        </div>
-    </div>
     
-    <div class="draggable-layer">
-        <div *ngFor="let row of rows; let y = index" class="row">
-            <moo-draggable-space *ngFor="let space of row; let x = index"
-            (dragStarted)="cdkDragStarted($event)"
-            (dragEnded)="cdkDragEnded($event)"
-            (dragMoved)="cdkDragMoved($event)"
-    
-            [touchDragging]="touchDragging"
-            [hoverSpace]="hoverSpace"
-            [space]="space"></moo-draggable-space>
+        <div class="pieces-layer">
+            <div [class]="'piece-container' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
+                <moo-piece *ngFor="let piece of board.pieces" [piece]="piece"></moo-piece>
+            </div>
         </div>
-    </div>
+        
+        <div [class]="'draggable-layer' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
+            <div *ngFor="let row of board.rows; let y = index" [class]="'row' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
+                <moo-draggable-space *ngFor="let space of row; let x = index"
+                (dragStarted)="cdkDragStarted($event)"
+                (dragEnded)="cdkDragEnded($event)"
+                (dragMoved)="cdkDragMoved($event)"
+        
+                [touchDragging]="touchDragging"
+                [hoverSpace]="hoverSpace"
+                [space]="space"></moo-draggable-space>
+            </div>
+        </div>
+    </ng-container>
 </div>

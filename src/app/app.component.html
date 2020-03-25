@@ -2,8 +2,12 @@
     <div class="container">
         <div class="board-container">
             <div class="board-wrapper">
-                <moo-board #board [rows]="rows" [pieces]="pieces"></moo-board>
+                <moo-board [board]="board"></moo-board>
             </div>
+        </div>
+        
+        <div>
+            <a (click)="board && board.flipBoardOrientation()">Flip board</a>
         </div>
     </div>
 </div>

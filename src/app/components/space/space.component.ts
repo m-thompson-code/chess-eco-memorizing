@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CdkDragMove, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { Space } from 'src/app/app.component';
 
@@ -25,19 +25,21 @@ export type HoverElement = HTMLElement;
     styleUrls: ['./space.style.scss']
 })
 export class SpaceComponent implements OnInit {
-    _space: Space;
+    private _space: Space | undefined | null;
 
     @Input()
-    set space(space: Space) {
+    public set space(space: Space | undefined | null) {
         if (this._space && this._space.spaceComponent === this) {
             this._space.spaceComponent = undefined;
         }
 
         this._space = space;
 
-        this._space.spaceComponent = this;
+        if (this._space) {
+            this._space.spaceComponent = this;
+        }
     }
-    get space(): Space {
+    public get space(): Space | undefined | null {
         return this._space;
     };
 

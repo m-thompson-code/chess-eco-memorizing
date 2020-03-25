@@ -7,6 +7,11 @@
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
+    
+    "strict": true, /* Enable all strict type-checking options. */
+    "noImplicitReturns": true,/* Firebase's default lint options make these pretty required */
+    "noUnusedLocals": true,/* Firebase's default lint options make these pretty required */
+
     "module": "esnext",
     "moduleResolution": "node",
     "importHelpers": true,

@@ -22,6 +22,10 @@
             height: 100%;
         }
     }
+
+    .row.flipped {
+        flex-direction: row-reverse;
+    }
 }
 
 .background-layer {
@@ -30,6 +34,10 @@
 
     display: flex;
     flex-direction: column;
+}
+
+.background-layer.flipped {
+    flex-direction: column-reverse;
 }
 
 .pieces-layer {
@@ -45,6 +53,10 @@
 
     display: flex;
     flex-direction: column;
+}
+
+.draggable-layer.flipped {
+    flex-direction: column-reverse;
 }
 
 .piece-container {
