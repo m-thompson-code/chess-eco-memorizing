@@ -36,6 +36,74 @@
     flex-direction: column;
 }
 
+.verital-notiation-labels {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .label {
+        flex-grow: 1;
+        height: 100%;
+        line-height: 1;
+        padding: 3px;
+    }
+    .label:nth-child(odd) {
+        color: #779556;
+    }
+    .label:nth-child(even) {
+        color: #EBECD0;
+    }
+}
+.verital-notiation-labels.flipped {
+    flex-direction: column-reverse;
+
+    .label:nth-child(odd) {
+        color: #EBECD0;
+    }
+    .label:nth-child(even) {
+        color: #779556;
+    }
+}
+
+.horizontal-notiation-labels {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    
+    .label {
+        flex-grow: 1;
+        height: 100%;
+        line-height: 1;
+
+        display: flex;
+        justify-content: flex-end;
+        padding: 3px;
+    }
+
+    .label:nth-child(odd) {
+        color: #EBECD0;
+    }
+    .label:nth-child(even) {
+        color: #779556;
+    }
+}
+.horizontal-notiation-labels.flipped {
+    flex-direction: row-reverse;
+    
+    .label:nth-child(odd) {
+        color: #779556;
+    }
+    .label:nth-child(even) {
+        color: #EBECD0;
+    }
+}
+
 .background-layer.flipped {
     flex-direction: column-reverse;
 }

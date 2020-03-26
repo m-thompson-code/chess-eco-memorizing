@@ -20,9 +20,11 @@
       "es2018",
       "dom"
     ],
-    "types": [
-      "hammerjs"
-    ]
+    "paths": {
+      "@app/*": ["src/app/*"],
+      "environments/*": ["src/environments/*"
+    ],
+  },
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,

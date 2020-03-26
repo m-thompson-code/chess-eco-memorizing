@@ -2,12 +2,31 @@
     <div class="container">
         <div class="board-container">
             <div class="board-wrapper">
-                <moo-board [board]="board"></moo-board>
+                <moo-board [boardManager]="boardManager"></moo-board>
             </div>
+            <!-- <div class="board-wrapper">
+                <moo-board [boardManager]="extraManager"></moo-board>
+            </div> -->
         </div>
-        
-        <div>
-            <a (click)="board && board.flipBoardOrientation(true)">Flip board</a>
-        </div>
+
+        <ng-container *ngIf="boardManager">
+            <div class="move-notations">
+                <div *ngFor="let boardHistory of boardManager.history; let i = index" class="move-notation">
+                    <span>{{ i + 1 }}. {{ boardHistory.white.moveNotation }} {{ boardHistory.black ? boardHistory.black.moveNotation : '...' }}</span>
+                </div>
+            </div>
+            
+            <div>
+                Turn: {{ boardManager.turn }}
+            </div>
+    
+            <div>
+                <!-- White: {{ boardManager.kingIsInCheck('white') ? 'IN CHECK' : 'SAFE' }} | Black: {{ boardManager.kingIsInCheck('black') ? 'IN CHECK' : 'SAFE' }} -->
+            </div>
+            
+            <div>
+                <a (click)="boardManager && boardManager.flipBoardOrientation(true)">Flip board</a>
+            </div>
+        </ng-container>
     </div>
 </div>

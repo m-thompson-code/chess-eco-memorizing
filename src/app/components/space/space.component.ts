@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CdkDragMove, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
-import { Space } from 'src/app/app.component';
+import { Space } from '@app/types/space';
 
 export interface DragStarted<T=any> {
     cdkDragStart: CdkDragStart<T>;
@@ -48,7 +48,7 @@ export class SpaceComponent implements OnInit {
     @Input() hoverSpace?: Space;
     @Input() movedToSpace?: Space;
     @Input() movedFromSpace?: Space;
-
+    
     constructor() {
 
     }

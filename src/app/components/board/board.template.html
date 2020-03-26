@@ -1,35 +1,51 @@
 <div mooSquare class="board">
-    <ng-container *ngIf="board">
-        <div [class]="'background-layer' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
-            <div *ngFor="let row of board.spaces; let y = index" [class]="'row' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
-                <moo-space *ngFor="let space of row; let x = index"
+    <ng-container *ngIf="boardManager">
+        <div [class]="'background-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+            <div *ngFor="let row of boardManager.board; let y = index" [class]="'row' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+                <moo-space *ngFor="let position of row; let x = index"
                 [activeSpace]="activeSpace" 
                 [movedToSpace]="movedToSpace" 
                 [movedFromSpace]="movedFromSpace" 
                 [hoverStartFromSpace]="hoverStartFromSpace" 
                 [hoverSpace]="hoverSpace" 
-                [space]="space"></moo-space>
+                [space]="position.space"></moo-space>
             </div>
+
+            <ng-container *ngIf="showNotationLabels">
+                <div [class]="'verital-notiation-labels' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+                    <div class="label" *ngFor="let notation of verticalNotationlabels">
+                        {{ notation }}
+                    </div>
+                </div>
+
+                <div [class]="'horizontal-notiation-labels' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+                    <div class="label" *ngFor="let notation of horizontalNotationlabels">
+                        {{ notation }}
+                    </div>
+                </div>
+            </ng-container>
         </div>
-    
+
         <div class="pieces-layer">
-            <div [class]="'piece-container' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
-                <ng-container *ngFor="let piece of board.pieces">
+            <div [class]="'piece-container' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+                <ng-container *ngFor="let piece of boardManager.pieces">
                     <moo-piece *ngIf="piece.active" [piece]="piece"></moo-piece>
                 </ng-container>
             </div>
         </div>
         
-        <div [class]="'draggable-layer' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
-            <div *ngFor="let row of board.spaces; let y = index" [class]="'row' + (board.boardOrientation === 'flipped' ? ' flipped' : '')">
-                <moo-draggable-space *ngFor="let space of row; let x = index"
+        <div [class]="'draggable-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+            <div *ngFor="let row of boardManager.board; let y = index" [class]="'row' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+                <moo-draggable-space *ngFor="let position of row; let x = index"
                 (dragStarted)="handleDragStarted($event)"
                 (dragEnded)="handleDragEnded($event)"
                 (dragMoved)="handleDragMoved($event)"
+
+                [turn]="boardManager.turn"
         
                 [touchDragging]="touchDragging"
                 [hoverSpace]="hoverSpace"
-                [space]="space" (click)="activateSpace(space)"></moo-draggable-space>
+                [space]="position.space" (click)="handleClickingDraggable(position)"></moo-draggable-space>
             </div>
         </div>
     </ng-container>

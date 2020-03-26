@@ -2,7 +2,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
+    // flex-direction: column;
+    flex-direction: row;
 }
 
 .board-wrapper {
@@ -11,4 +12,20 @@
     height: 100%;
     max-width: 500px;
     margin: 6px;
+}
+
+.move-notations {
+    display: flex;
+    flex-direction: row;
+
+    overflow-x: auto;
+    white-space: nowrap;
+        
+    .move-notation {
+        margin-right: 24px;
+
+        span {
+            white-space:nowrap;
+        }
+    }
 }

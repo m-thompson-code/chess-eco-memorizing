@@ -11,7 +11,6 @@ export class SquareDirective implements AfterViewInit {
 
     @HostListener('window:resize') 
     onResize(): void {
-        // console.log("on Resize");
         this.matchWidth(this.el.nativeElement);
     }
 
@@ -21,8 +20,6 @@ export class SquareDirective implements AfterViewInit {
 
     public matchWidth(ele: HTMLElement): void {
         if (!ele) return;
-
-        // console.log(ele);
 
         const width: number = ele.getBoundingClientRect().width || 0;
 

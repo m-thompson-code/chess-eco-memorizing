@@ -1,11 +1,9 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Space, Board, Piece } from 'src/app/app.component';
-import { DragMoved, DragStarted, DragEnded, HoverElement } from '../space/space.component';
+import { BoardManager, BoardPosition } from '@app/types/board';
+import { Piece } from '@app/types/piece';
+import { Space, Coords } from '@app/types/space';
 
-export interface Coord {
-    x: number;
-    y: number;
-}
+import { DragMoved, DragStarted, DragEnded, HoverElement } from '../space/space.component';
 
 @Component({
     selector: 'moo-board',
@@ -13,7 +11,7 @@ export interface Coord {
     styleUrls: ['./board.style.scss']
 })
 export class BoardComponent implements OnInit {
-    @Input() public board?: Board;
+    @Input() public boardManager?: BoardManager;
 
     @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
     @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
@@ -38,14 +36,23 @@ export class BoardComponent implements OnInit {
     public dragging: boolean;
     public touchDragging: boolean;
 
-    public pointerPosition: Coord = {
+    public pointerPosition: Coords = {
         x: 0,
         y: 0,
     };
 
+    showNotationLabels: boolean;
+
+    verticalNotationlabels: number[];
+    horizontalNotationlabels: string[];
+
     constructor() {
         this.dragging = false;
         this.touchDragging = false;
+        this.showNotationLabels = true;
+
+        this.verticalNotationlabels = [8, 7, 6, 5, 4, 3, 2, 1];
+        this.horizontalNotationlabels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     }
 
     public ngOnInit() {
@@ -54,47 +61,46 @@ export class BoardComponent implements OnInit {
         };
     }
 
-    dropPiece(piece: Piece, space: Space): boolean {
-        if (!this.board) {
+    public movePiece(piece: Piece, space: Space): void {
+        if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
             };
         }
 
         this.draggingPiece = undefined;
-        // this.activeSpace = undefined;
         this.hoverSpace = undefined;
         this.hoverStartFromSpace = undefined;
-        
-        if (piece) {
-            piece.dragging = false;
-            piece.touchDragging = false;
+    
+        piece.dragging = false;
+        piece.touchDragging = false;
 
-            if (piece.x === space.x && piece.y === space.y) {
-                this.board.movePiece(piece, space.x, space.y);
-                // this.activeSpace = this.board.spaces[piece.y][piece.x];
+        const oldPosition = piece.getPosition();
+        const newPosition = space.getPosition();
+
+        // Exit early / activate other space with same team piece
+        if (newPosition.piece) {
+            if (newPosition.piece.color === piece.color) {
+                piece.resetBoardPositionStyles();
                 this.activateSpace(space);
-                return false;
+                return;
             }
-
-            // Check if piece can move here
-
-            this.movedFromSpace = this.board.spaces[piece.y][piece.x];
-
-            this.board.movePiece(piece, space.x, space.y);
-
-            this.movedToSpace = this.board.spaces[piece.y][piece.x];
-
-            this.board.hideMovementDots();
-
-            return true;
         }
 
-        return false;
+        const moved = piece.moveToPosition(newPosition);
+
+        if (moved) {
+            this.movedFromSpace = oldPosition.space;
+            this.movedToSpace = space;
+        } else {
+            piece.resetBoardPositionStyles();
+        }
+
+        this.boardManager.hideMovementDots();
     }
 
     dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
-        if (!this.board) {
+        if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
             }
@@ -103,8 +109,8 @@ export class BoardComponent implements OnInit {
 
         const width = dragMovedEvent.cdkDragMove.source.element.nativeElement.offsetWidth;
 
-        let spaceOffsetX = (this.board.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.x) : dragMovedEvent.space.x) * width;
-        let spaceOffsetY = (this.board.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.y) : dragMovedEvent.space.y) * width;
+        let spaceOffsetX = (this.boardManager.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.x) : dragMovedEvent.space.x) * width;
+        let spaceOffsetY = (this.boardManager.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.y) : dragMovedEvent.space.y) * width;
 
         const draggedSpaceOffsetX = spaceOffsetX + dragMovedEvent.cdkDragMove.distance.x;
         const draggedSpaceOffsetY = spaceOffsetY + dragMovedEvent.cdkDragMove.distance.y;
@@ -132,18 +138,15 @@ export class BoardComponent implements OnInit {
     }
 
     public updateHoverSpace(dragMovedEvent: DragMoved): void {
-        if (!this.board) {
+        if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
-            }
+            };
         }
+
         const event = dragMovedEvent.cdkDragMove;
 
         const width = event.source.element.nativeElement.offsetWidth;
-
-        dragMovedEvent.cdkDragMove.source.element.nativeElement.offsetWidth
-
-        // console.log(dragMovedEvent);
 
         let _x = this.hoverStartFromSpace && this.hoverStartFromSpace.x || 0;
         let _y = this.hoverStartFromSpace && this.hoverStartFromSpace.y || 0;
@@ -159,7 +162,7 @@ export class BoardComponent implements OnInit {
             _yDelta = Math.round(event.distance.y / width);
         }
 
-        if (this.board.boardOrientation === 'flipped') {
+        if (this.boardManager.boardOrientation === 'flipped') {
             _x -= _xDelta;
             _y -= _yDelta;
         } else {
@@ -182,62 +185,96 @@ export class BoardComponent implements OnInit {
         this.hoverX = _x;
         this.hoverY = _y;
 
-        this.hoverSpace = this.board.spaces[_y][_x];
+        const hoverPosition = this.boardManager.getPosition(_x, _y);
+
+        if (!hoverPosition) {
+            throw {
+                message: "Unexpected hoverPosition",
+                _x: _x,
+                _y: _y,
+            }
+        }
+
+        this.hoverSpace = hoverPosition.space;
     }
 
     public activateSpace(space: Space): void {
-        if (!this.board) {
+        if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
             }
         }
 
-        const check = this.board.checkSpace(space.x, space.y);
+        if (this.activeSpace !== space.piece) {
+            this.activeSpace = space;
 
-        if (!check.piece) {
-            return;
+            if (space.piece) {
+                this.boardManager.showMovementDots(space.piece);
+            }
+        }
+    }
+    
+    public deactivateSpace(): void {
+        if (!this.boardManager) {
+            throw {
+                message: 'Unexpected missing message',
+            }
         }
 
-        if (this.activeSpace !== check.space) {
-            this.activeSpace = check.space;
-            this.board.getMoveToSpaces(check.piece, true);
+        if (this.activeSpace) {
+            this.activeSpace = undefined;
+            this.boardManager.hideMovementDots();
         }
     }
 
     public handleDragStarted(dragStartedEvent: DragStarted): void {
-        if (!this.board) {
+        if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
-            }
+            };
+        }
+
+        this.hoverStartFromSpace = undefined;
+        this.hoverSpace = undefined;
+
+        if (!dragStartedEvent.space || !dragStartedEvent.space.piece || dragStartedEvent.space.piece.color !== this.boardManager.turn) {
+            this.hoverStartFromSpace = undefined;
+            this.hoverSpace = undefined;
+            this.dragging = false;
+            this.touchDragging = false;
+            this.deactivateSpace();
+            return;
         }
 
         const event = dragStartedEvent.cdkDragStart;
 
-        // console.log('handleDragStarted');
-        // console.log(event);
-
         event.source.element.nativeElement.classList.add('active');
 
         this.hoverStartFromSpace = dragStartedEvent.space;
-
         this.hoverSpace = undefined;
-        // this.activeSpace = dragStartedEvent.space;
+
         this.activateSpace(dragStartedEvent.space);
 
         return this.dragStarted.emit(dragStartedEvent);
     }
 
     public handleDragMoved(dragMovedEvent: DragMoved): void {
-        if (!this.board) {
+        if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
             }
         }
 
-        const event = dragMovedEvent.cdkDragMove;
+        if (!dragMovedEvent.space || !dragMovedEvent.space.piece || dragMovedEvent.space.piece.color !== this.boardManager.turn) {
+            this.hoverStartFromSpace = undefined;
+            this.hoverSpace = undefined;
+            this.dragging = false;
+            this.touchDragging = false;
+            this.deactivateSpace();
+            return;
+        }
 
-        // console.log('handleDragMoved');
-        // console.log(event);
+        const event = dragMovedEvent.cdkDragMove;
 
         if (event.pointerPosition && typeof this.xDelta === 'undefined') {
             const clientRect = event.source.element.nativeElement.getBoundingClientRect();
@@ -252,51 +289,76 @@ export class BoardComponent implements OnInit {
         this.updateHoverSpace(dragMovedEvent);
 
         this.dragging = true;
+
         if (dragMovedEvent.cdkDragMove.event.type === 'touchmove') {
             this.touchDragging = true;
         }
 
         this.pointerPosition = event.pointerPosition;
 
-        for (let piece of this.board.pieces) {
-            this.draggingPiece = piece;
+        this.draggingPiece = dragMovedEvent.space.piece;
 
-            if (piece.x === dragMovedEvent.space.x && piece.y === dragMovedEvent.space.y) {
-                this.dragPiece(piece, dragMovedEvent);
-
-                return this.dragMoved.emit(dragMovedEvent);
-            }
+        if (this.draggingPiece) {
+            this.dragPiece(this.draggingPiece, dragMovedEvent);
         }
+
+        return this.dragMoved.emit(dragMovedEvent);
     }
     
     public handleDragEnded(dragEndedEvent: DragEnded): void {
-        if (!this.board) {
+        if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
-            }
+            };
         }
+
         this.dragging = false;
         this.touchDragging = false;
 
-        const event = dragEndedEvent.cdkDragEnd;
+        if (!dragEndedEvent.space || !dragEndedEvent.space.piece || dragEndedEvent.space.piece.color !== this.boardManager.turn) {
+            this.hoverStartFromSpace = undefined;
+            this.hoverSpace = undefined;
+            this.dragging = false;
+            this.touchDragging = false;
+            this.deactivateSpace();
+            return;
+        }
 
-        // console.log('handleDragEnded');
-        // console.log(event, event.distance.x, event.distance.y);
+        const event = dragEndedEvent.cdkDragEnd;
 
         event.source.element.nativeElement.classList.remove('active');
 
         if (this.draggingPiece && this.hoverSpace) {
-            this.dropPiece(this.draggingPiece, this.hoverSpace);
+            this.movePiece(this.draggingPiece, this.hoverSpace);
         }
 
         this.hoverSpace = undefined;
         this.hoverStartFromSpace = undefined;
 
-        event.source.reset();
-
         this.xDelta = undefined;
         this.yDelta = undefined;
 
         return this.dragEnded.emit(dragEndedEvent);
+    }
+
+    public handleClickingDraggable(position: BoardPosition): void {
+        if (this.activeSpace && this.activeSpace.piece) {
+            this.movePiece(this.activeSpace.piece, position.space);
+            return;
+        }
+
+        if (!this.boardManager) {
+            throw {
+                message: "Unexpected missing board",
+            };
+        }
+
+        if (!position.piece) {
+            return;
+        }
+
+        if (this.boardManager.turn === position.piece.color) {
+            this.activateSpace(position.space);
+        }
     }
 }

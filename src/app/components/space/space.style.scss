@@ -10,12 +10,10 @@
 }
 
 .space.odd {
-    // background: #cccccc;
     background: #779556;
 }
 
 .space.even {
-    // background: #ffffff;
     background: #EBECD0;
 }
 
@@ -35,7 +33,6 @@
 }
 
 .space.hover {
-    // background: grey;
     color: white;
 }
 
@@ -45,17 +42,21 @@
 }
 
 .space.moved-to {
-    // background: darkred;
-    // background: #779556;
     background: yellowgreen;
 
     color: white;
 }
 
 .dot {
-    width: 75%;
-    height: 75%;
     background: black;
     opacity: .25;
     border-radius: 50%;
+
+    width: 34%;
+    height: 34%;
+}
+
+.dot.with-piece, .big-dot {
+    width: 75%;
+    height: 75%;
 }

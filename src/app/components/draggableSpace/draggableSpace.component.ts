@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CdkDragMove, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
-import { Space } from 'src/app/app.component';
+import { Space } from 'src/app/types/space';
+import { PieceColor } from '@app/types/piece';
 
 export interface DragStarted<T=any> {
     cdkDragStart: CdkDragStart<T>;
@@ -50,6 +51,8 @@ export class DraggableSpaceComponent implements OnInit {
     @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
     @Output() public dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter;
 
+    @Input() turn?: PieceColor;
+
     constructor() {
 
     }
@@ -62,7 +65,7 @@ export class DraggableSpaceComponent implements OnInit {
             space: this.space,
             cdkDragStart: event,
         };
-        // console.log('dragStarted', dragStartedEvent);
+
         return this.dragStarted.emit(dragStartedEvent);
     }
 
@@ -71,7 +74,7 @@ export class DraggableSpaceComponent implements OnInit {
             space: this.space,
             cdkDragMove: event,
         };
-        // console.log('dragMoved', dragMovedEvent);
+
         return this.dragMoved.emit(dragMovedEvent);
     }
 
@@ -80,7 +83,9 @@ export class DraggableSpaceComponent implements OnInit {
             space: this.space,
             cdkDragEnd: event,
         };
-        // console.log('dragEnded', dragEndedEvent);
-        return this.dragEnded.emit(dragEndedEvent);
+        
+        this.dragEnded.emit(dragEndedEvent);
+
+        event.source.reset();
     }
 }
