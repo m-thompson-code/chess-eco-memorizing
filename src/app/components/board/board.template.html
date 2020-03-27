@@ -3,9 +3,9 @@
         <div [class]="'background-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
             <div *ngFor="let row of boardManager.board; let y = index" [class]="'row' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
                 <moo-position *ngFor="let position of row; let x = index"
-                [activePosition]="activePosition" 
-                [movedToPosition]="movedToPosition" 
-                [movedFromPosition]="movedFromPosition" 
+                [activePosition]="boardManager.activePosition" 
+                [movedToPosition]="boardManager.movedToPosition" 
+                [movedFromPosition]="boardManager.movedFromPosition" 
                 [hoverStartFromPosition]="hoverStartFromPosition" 
                 [hoverPosition]="hoverPosition" 
                 [position]="position"></moo-position>

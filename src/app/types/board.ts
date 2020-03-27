@@ -10,6 +10,14 @@ export interface BoardHistory {
     capturedPiece?: Piece;
     oldPosition: BoardPosition;
     newPosition: BoardPosition;
+    castle?: {
+        rook: Piece;
+        oldRookPosition: BoardPosition;
+    };
+    enPassante?: {
+        pawn: Piece;
+        oldPawnPosition: BoardPosition;
+    };
 }
 
 export interface BoardPositionStyles {
@@ -24,23 +32,28 @@ export type Board = {
 } & BoardPosition[][];
 
 export class BoardManager {
-    board: Board;
-    pieces: Piece[];
+    public board: Board;
+    public pieces: Piece[];
 
-    history: {
+    public activePosition?: BoardPosition;
+
+    public movedToPosition?: BoardPosition;
+    public movedFromPosition?: BoardPosition;
+
+    public history: {
         'white' : BoardHistory;
         'black'? : BoardHistory;
     }[];
     
-    turnCount: number;
+    public turnCount: number;
 
-    turn: PieceColor;
+    public turn: PieceColor;
 
-    blackKingIsInCheck: boolean;
-    whiteKingIsInCheck: boolean;
+    public blackKingIsInCheck: boolean;
+    public whiteKingIsInCheck: boolean;
 
-    boardOrientation: BoardOrientation;
-    showingDotsFor?: Piece;
+    public boardOrientation: BoardOrientation;
+    public showingDotsFor?: Piece;
 
     constructor(boardOrientation?: BoardOrientation) {
         this.boardOrientation = boardOrientation || 'normal';
@@ -67,6 +80,7 @@ export class BoardManager {
         for (const row of this.board) {
             for (const position of row) {
                 position.showDot = false;
+                position.showBigDot = false;
             }
         }
 
@@ -79,12 +93,26 @@ export class BoardManager {
             return;
         }
 
-        const moves: BoardPosition[] = piece.getAvailableMoves();
+        const moves: BoardPosition[] = piece.getAvailableMoves(true, true);
 
         this.hideMovementDots();
 
         for (const position of moves) {
             position.showDot = true;
+        }
+
+        // Handle En Passante
+        if (piece.checkEnPassante(-1)) {
+            const leftPosition = this.getPosition(piece.x - 1, piece.y + (piece.color === 'white' ? -1 : 1));
+            if (leftPosition) {
+                leftPosition.showBigDot = true;
+            }
+        }
+        if (piece.checkEnPassante(1)) {
+            const rightPosition = this.getPosition(piece.x + 1, piece.y + (piece.color === 'white' ? -1 : 1));
+            if (rightPosition) {
+                rightPosition.showBigDot = true;
+            }
         }
 
         this.showingDotsFor = piece;
@@ -259,14 +287,18 @@ export class BoardManager {
         this.pushPiece('white', 'king', 4, 7);
         this.pushPiece('black', 'king', 4, 0);
     }
-    
-    public kingIsInCheck(color: PieceColor): boolean {
+
+    public kingIsThreatened(kingColor: PieceColor): boolean {
         for (let piece of this.pieces) {
-            if (piece.color === color) {
+            if (piece.color === kingColor) {
                 continue;
             }
 
-            const availableMoves: BoardPosition[] = piece.getAvailableMoves();
+            if (!piece.active) {
+                continue;
+            }
+
+            const availableMoves: BoardPosition[] = piece.getAvailableMoves(false, false);
 
             for (const move of availableMoves) {
                 if (move.piece && move.piece.pieceType === 'king') {
@@ -277,8 +309,30 @@ export class BoardManager {
 
         return false;
     }
+    
+    public positionIsThreatened(enemyColor: PieceColor, position: BoardPosition): boolean {
+        for (let piece of this.pieces) {
+            if (piece.color !== enemyColor) {
+                continue;
+            }
+            
+            if (!piece.active) {
+                continue;
+            }
 
-    public popMoveHistroy(): BoardHistory | undefined {
+            const availableMoves: BoardPosition[] = piece.getAvailableMoves(false, false);
+
+            for (const move of availableMoves) {
+                if (move === position) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public popMoveHistroy(updateUI: boolean): BoardHistory | undefined {
         if (!this.turnCount) {
             return;
         }
@@ -292,30 +346,81 @@ export class BoardManager {
             this.history[this.history.length - 1].black = undefined;
 
             this.turn = 'black';
-            this.blackKingIsInCheck = this.kingIsInCheck('black');
+            this.blackKingIsInCheck = this.kingIsThreatened('black');
         } else {
             boardHistory = this.history.pop()?.white;
 
             this.turn = 'white';
-            this.whiteKingIsInCheck = this.kingIsInCheck('white');
+            this.whiteKingIsInCheck = this.kingIsThreatened('white');
         }
 
-        console.log(boardHistory);
+        // console.log(boardHistory);
 
         if (boardHistory) {
-            if (boardHistory.capturedPiece) {
-                boardHistory.capturedPiece.active = true;
+            const _capturedPiece = boardHistory.capturedPiece;
+
+            if (_capturedPiece) {
+                _capturedPiece.setPosition(boardHistory.newPosition);
+                _capturedPiece.active = true;
             }
 
-            boardHistory.movingPiece.setPosition(boardHistory.oldPosition);
+            // Handling undoing a castling
+            const _rookPiece = boardHistory.castle?.rook;
+            const _oldRookPosition = boardHistory.castle?.oldRookPosition;
+
+            if (_rookPiece && _oldRookPosition) {
+                _rookPiece.setPosition(_oldRookPosition);
+            }
+
+            // Handling undoing an en passante
+            const _pawnPiece = boardHistory.enPassante?.pawn;
+            const _oldPawnPosition = boardHistory.enPassante?.oldPawnPosition;
+            if (_pawnPiece && _oldPawnPosition) {
+                _pawnPiece.setPosition(_oldPawnPosition);
+                _pawnPiece.active = true;
+            }
+
+            const _movingPiece = boardHistory.movingPiece;
+            _movingPiece.setPosition(boardHistory.oldPosition);
+            _movingPiece.moveCount -= 1;
         }
 
         this.turnCount -= 1;
 
+        // UI
+        if (updateUI) {
+            if (whiteMove) {
+                this.movedFromPosition = this.history[this.history.length - 1]?.white.oldPosition;
+                this.movedToPosition = this.history[this.history.length - 1]?.white.newPosition;
+            } else {
+                this.movedFromPosition = this.history[this.history.length - 1]?.black?.oldPosition;
+                this.movedToPosition = this.history[this.history.length - 1]?.black?.newPosition;
+            }
+    
+            if (boardHistory) {
+                if (boardHistory.capturedPiece) {
+                    boardHistory.capturedPiece.resetBoardPositionStyles();
+                }
+
+                // Handling undoing a castling
+                const _rookPiece = boardHistory.castle?.rook;
+                if (_rookPiece) {
+                    _rookPiece.resetBoardPositionStyles();
+                }
+
+                boardHistory.movingPiece.resetBoardPositionStyles();
+            }
+            
+            this.activePosition = undefined;
+
+            this.hideMovementDots();
+        }
+        // End UI
+        
         return boardHistory;
     }
 
-    public pushMoveHistroy(boardHistory: BoardHistory): BoardHistory {
+    public pushMoveHistroy(boardHistory: BoardHistory, updateUI: boolean): BoardHistory {
         const whiteMove: boolean = this.turn === 'white';//!(this.turnCount % 2);//this.color === 'white';
 
         if (whiteMove) {
@@ -323,19 +428,197 @@ export class BoardManager {
                 'white': boardHistory
             });
             this.turn = 'black';
-            this.blackKingIsInCheck = this.kingIsInCheck('black');
-
+            this.blackKingIsInCheck = this.kingIsThreatened('black');
         } else {
             this.history[this.history.length - 1].black = boardHistory;
             this.turn = 'white';
-            this.whiteKingIsInCheck = this.kingIsInCheck('white');
+            this.whiteKingIsInCheck = this.kingIsThreatened('white');
         }
 
-        console.log(boardHistory);
-
+        // console.log(boardHistory);
 
         this.turnCount += 1;
 
+        if (updateUI) {
+            this.movedFromPosition = boardHistory.oldPosition;
+            this.movedToPosition = boardHistory.newPosition;
+        }
+
         return boardHistory;
+    }
+
+    public moveUsingNotation(notation: string): BoardHistory | undefined {
+        let boardHistory: BoardHistory | undefined = undefined;
+
+        if (notation === 'O-O') {
+            if (this.turn === 'white') {
+                const position = this.getPosition(4, 7);
+
+                const piece = position?.piece;
+
+                if (piece && piece.pieceType === 'king') {
+                    const newPosition = this.getPosition(6, 7);
+
+                    if (newPosition) {
+                        boardHistory = piece.moveToPosition(newPosition, true);
+                    }
+                }
+            } else {
+                const position = this.getPosition(4, 0);
+
+                const piece = position?.piece;
+
+                if (piece && piece.pieceType === 'king') {
+                    const newPosition = this.getPosition(6, 0);
+
+                    if (newPosition) {
+                        boardHistory = piece.moveToPosition(newPosition, true);
+                    }
+                }
+            }
+        }
+
+        if (notation === 'O-O-O') {
+            if (this.turn === 'white') {
+                const position = this.getPosition(4, 7);
+
+                const piece = position?.piece;
+
+                if (piece && piece.pieceType === 'king') {
+                    const newPosition = this.getPosition(1, 7);
+
+                    if (newPosition) {
+                        boardHistory = piece.moveToPosition(newPosition, true);
+                    }
+                }
+            } else {
+                const position = this.getPosition(4, 0);
+
+                const piece = position?.piece;
+
+                if (piece && piece.pieceType === 'king') {
+                    const newPosition = this.getPosition(1, 0);
+
+                    if (newPosition) {
+                        boardHistory = piece.moveToPosition(newPosition, true);
+                    }
+                }
+            }
+        } else {
+            const firstLetter = notation.substring(0, 1);
+            let movementNotation = "";
+    
+            const pieceType = this.getPieceTypeFromNotationLetter(firstLetter);
+    
+            const filteredPieces = [];
+    
+            let _notation = notation;
+    
+            if (_notation.charAt(_notation.length - 1) === '+' || _notation.charAt(_notation.length - 1) === '#') {
+                _notation = _notation.substring(0, _notation.length - 1);
+            }
+            
+            movementNotation = _notation.substring(_notation.length - 2, _notation.length);
+    
+            for (const piece of this.pieces) {
+                if (piece.pieceType === pieceType) {
+                    filteredPieces.push(piece);
+                }
+            }
+    
+            const moveToPosition = this.getPositionByNotation(movementNotation);
+    
+            const _filteredPieces = [];
+    
+            if (moveToPosition) {
+                for (const piece of filteredPieces) {
+                    const availableMoves = piece.getAvailableMoves(true, true);
+    
+                    if (availableMoves.includes(moveToPosition)) {
+                        _filteredPieces.push(piece);
+                    }
+                }
+
+                if (_filteredPieces.length === 1) {
+                    boardHistory = _filteredPieces[0].moveToPosition(moveToPosition, true);
+
+                    if (boardHistory?.moveNotation !== notation) {
+                        console.error("Mismatch notations", boardHistory?.moveNotation, notation);
+                    }
+                    return _filteredPieces[0].moveToPosition(moveToPosition, true);
+                }
+            }
+    
+            throw {
+                message: "Nope",
+                filteredPieces: filteredPieces,
+                _filteredPieces: _filteredPieces,
+                pieceType: pieceType,
+                movementNotation: movementNotation,
+                firstLetter: firstLetter,
+            };
+        }
+
+        if (!boardHistory) {
+            console.error("moveUsingNotation is invalid", notation);
+        }
+
+        return;
+    }
+
+    getPositionByNotation(letters: string): BoardPosition | undefined {
+        ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+
+        const hMap: {[h: string]: number} = {
+            a: 0, b: 1, c: 2, d: 3, e: 4, f: 5, g: 6, h: 7,
+        };
+        const vMap: {[v: string]: number} = {
+            '1': 7, '2': 6, '3': 5, '4': 4, '5': 3, '6': 2, '7': 1, '8': 0,
+        };
+
+        const hLetter = letters.charAt(0);
+        const vLetter = letters.charAt(1);
+
+        const x = hMap[hLetter];
+        const y = vMap[vLetter];
+
+        if (typeof x === 'undefined' || typeof y === 'undefined') {
+            throw {
+                message: "Invalid letters",
+                letters: letters,
+            };
+        }
+
+        return this.getPosition(x, y);
+    }
+
+    public getPieceTypeFromNotationLetter(letter: string): PieceType {
+        if (letter === 'R') {
+            return 'rook';
+        }
+
+        if (letter === 'N') {
+            return 'knight';
+        }
+        
+        if (letter === 'B') {
+            return 'bishop';
+        }
+        
+        if (letter === 'Q') {
+            return 'queen';
+        }
+
+        if (letter === 'K') {
+            return 'king';
+        }
+
+        if (['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].includes(letter)) {
+            return 'pawn';
+        }
+
+        throw {
+            message: "Unexpected letter",
+        };
     }
 }

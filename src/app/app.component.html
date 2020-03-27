@@ -4,9 +4,6 @@
             <div class="board-wrapper">
                 <moo-board [boardManager]="boardManager"></moo-board>
             </div>
-            <!-- <div class="board-wrapper">
-                <moo-board [boardManager]="extraManager"></moo-board>
-            </div> -->
         </div>
 
         <ng-container *ngIf="boardManager">
@@ -17,7 +14,7 @@
             </div>
 
             <div>
-                <a (click)="boardManager && boardManager.popMoveHistroy()">Back</a>
+                <a (click)="boardManager && boardManager.popMoveHistroy(true)">Back</a>
             </div>
             
             <div>
@@ -26,6 +23,11 @@
     
             <div>
                 White: {{ boardManager.whiteKingIsInCheck ? 'IN CHECK' : 'SAFE' }} | Black: {{ boardManager.blackKingIsInCheck ? 'IN CHECK' : 'SAFE' }}
+            </div>
+
+            <div>
+               <input [value]="test" (change)="updateValue($event)">
+               <a (click)="boardManager && boardManager.moveUsingNotation(test); test = ''">Move</a>
             </div>
             
             <div>

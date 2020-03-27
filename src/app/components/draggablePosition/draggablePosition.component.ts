@@ -5,17 +5,17 @@ import { BoardPosition } from '@app/types/boardPosition';
 
 export interface DragStarted<T=any> {
     cdkDragStart: CdkDragStart<T>;
-    position: BoardPosition | undefined;
+    position?: BoardPosition;
 }
 
 export interface DragMoved<T=any> {
     cdkDragMove: CdkDragMove<T>;
-    position: BoardPosition | undefined;
+    position?: BoardPosition;
 }
 
 export interface DragEnded<T=any> {
     cdkDragEnd: CdkDragEnd<T>;
-    position: BoardPosition | undefined;
+    position?: BoardPosition;
 }
 
 export type HoverElement = HTMLElement;

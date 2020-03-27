@@ -37,16 +37,22 @@ export class BoardPosition implements Coords {
 
         // Let the old piece keep its x and y values so that if we bring that piece back, we can position it properly
 
-        this._piece = piece;
+        if (piece) {
+            const oldPosition = piece.getPosition();
 
-        if (this._piece) {
-            this._piece.getPosition = () => {
+            if (oldPosition) {
+                oldPosition.piece = undefined;
+            }
+            
+            piece.getPosition = () => {
                 return this;
             }
     
-            this._piece.x = this.x;
-            this._piece.y = this.y;
+            piece.x = this.x;
+            piece.y = this.y;
         }
+
+        this._piece = piece;
     }
 
     public get piece(): Piece | undefined {

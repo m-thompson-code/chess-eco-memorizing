@@ -23,11 +23,6 @@ export class BoardComponent implements OnInit {
     public hoverX: number = 0;
     public hoverY: number = 0;
 
-    public activePosition?: BoardPosition;
-
-    public movedToPosition?: BoardPosition;
-    public movedFromPosition?: BoardPosition;
-
     public hoverStartFromPosition?: BoardPosition;
     public hoverPosition?: BoardPosition;
 
@@ -75,27 +70,20 @@ export class BoardComponent implements OnInit {
         piece.dragging = false;
         piece.touchDragging = false;
 
-        const oldPosition = piece.getPosition();
-
         // Exit early / activate other position with same team piece
-        if (newPosition.piece) {
-            if (newPosition.piece.color === piece.color) {
-                piece.resetBoardPositionStyles();
-                this.activatePosition(newPosition);
-                return;
-            }
+        if (newPosition.piece && newPosition.piece.color === piece.color && !newPosition.showDot && !newPosition.showBigDot) {
+            piece.resetBoardPositionStyles();
+            this.activatePosition(newPosition);
+            return;
         }
 
-        const moved = piece.moveToPosition(newPosition);
+        const moved = piece.moveToPosition(newPosition, true);
 
-        if (moved) {
-            this.movedFromPosition = oldPosition;
-            this.movedToPosition = newPosition;
-        } else {
+        if (!moved) {
             piece.resetBoardPositionStyles();
         }
 
-        this.deactivatePosition();
+        // this.deactivatePosition();
     }
 
     dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
@@ -203,7 +191,7 @@ export class BoardComponent implements OnInit {
             }
         }
 
-        this.activePosition = position;
+        this.boardManager.activePosition = position;
 
         if (position.piece) {
             this.boardManager.showMovementDots(position.piece);
@@ -217,8 +205,8 @@ export class BoardComponent implements OnInit {
             }
         }
 
-        if (this.activePosition) {
-            this.activePosition = undefined;
+        if (this.boardManager.activePosition) {
+            this.boardManager.activePosition = undefined;
 
             this.boardManager.hideMovementDots();
         }
@@ -339,15 +327,15 @@ export class BoardComponent implements OnInit {
     }
 
     public handleClickingDraggable(position: BoardPosition): void {
-        if (this.activePosition && this.activePosition.piece) {
-            this.movePiece(this.activePosition.piece, position);
-            return;
-        }
-
         if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
             };
+        }
+
+        if (this.boardManager.activePosition && this.boardManager.activePosition.piece) {
+            this.movePiece(this.boardManager.activePosition.piece, position);
+            return;
         }
 
         if (!position.piece) {

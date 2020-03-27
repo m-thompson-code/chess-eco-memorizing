@@ -12,13 +12,19 @@ export class AppComponent implements OnInit, AfterViewInit {
     boardManager?: BoardManager;
     extraManager?: BoardManager;
 
+    test: string;
+
     constructor() {
-        
+        this.test = "";
     }
 
     ngOnInit() {
         this.boardManager = new BoardManager();
         this.extraManager = new BoardManager();
+    }
+
+    updateValue(inputChangeEvent: any) {
+        this.test = inputChangeEvent.target.value;
     }
 
     ngAfterViewInit() {
