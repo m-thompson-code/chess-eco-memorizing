@@ -1,0 +1,3 @@
+<div [class]="'position' + (((position && position.x || 0) + (position && position.y || 0)) % 2 ? ' odd' : ' even') + (activePosition === position ? ' active' : '') + (movedFromPosition === position ? ' moved-from' : '') + (movedToPosition === position ? ' moved-to' : '') + (hoverPosition === position ? ' hover' : '') + (hoverStartFromPosition === position ? ' hover-start-from' : '')">
+    <div *ngIf="position && (position.showDot || position.showBigDot)" [class]="'dot' + (position.piece ? ' with-piece' : '') + (position.showBigDot ? ' big-dot' : '')"></div>
+</div>

@@ -1,81 +1,56 @@
-import { Coords, Space, GetBoardManagerFunc, GetPositionFunc } from './space';
-import { BoardPosition, BoardHistory } from './board';
+import { BoardHistory, BoardManager } from '@app/types/board';
+import { BoardPosition, Coords, GetBoardManagerFunc, GetBoardPositionFunc } from '@app/types/boardPosition';
 
 export type PieceColor = 'white' | 'black';
 export type PieceType = 'bishop' | 'king' | 'knight' | 'pawn' | 'queen' | 'rook';
 
-export type GetSpaceFunc = () => Space;
-
-export interface PieceInit extends Coords {
+export interface PieceInit {
+    position: BoardPosition;
     color: PieceColor;
     pieceType: PieceType;
-    getBoard: GetBoardManagerFunc;
+    boardManager: BoardManager;
 }
 
 export class Piece implements Coords {
-    color: PieceColor;
-    pieceType: PieceType;
+    public color: PieceColor;
+    public pieceType: PieceType;
 
-    x: number;
-    y: number;
+    public x: number;
+    public y: number;
 
-    active: boolean;
+    public active: boolean;
 
-    left: string;
-    top: string;
+    public left: string;
+    public top: string;
 
-    dragging: boolean;
-    touchDragging: boolean;
+    public dragging: boolean;
+    public touchDragging: boolean;
 
-    disableAnimations: boolean;
+    public disableAnimations: boolean;
 
-    getBoardManager: GetBoardManagerFunc;
-    getPosition: GetPositionFunc;
-    getSpace: GetSpaceFunc;
+    public readonly getBoardManager: GetBoardManagerFunc;
+    public getPosition: GetBoardPositionFunc;
 
     constructor(pieceInit: PieceInit) {
         this.getBoardManager = () => {
-            return pieceInit.getBoard();
+            return pieceInit.boardManager;
         };
 
-        this.getPosition = () => {
-            const _position = this.getBoardManager().getPosition(pieceInit.x, pieceInit.y);
-            if (!_position) {
-                throw {
-                    message: "Unexpected _position",
-                    x: pieceInit.x,
-                    y: pieceInit.y,
-                };
-            }
-
-            return _position;
-        }
-
-        this.getPosition().piece = this;
-
-        this.getSpace = () => {
-            return this.getPosition().space;
-        };
-
-        const space = this.getSpace();
-
-        if (space.piece) {
-            throw {
-                message: "Unxpected space already has piece",
-                space: space,
-                piece: this,
-            };
-        }
+        // Note that these values are only temporary since Position's set method for piece will update piece
+        this.x = pieceInit.position.x;
+        this.y = pieceInit.position.y;
         
-        this.getSpace().piece = this;
+        this.getPosition = () => {
+            return pieceInit.position;
+        };
 
-        const boardPositionStyles = this.getBoardManager().getBoardPositionStyles(pieceInit.x, pieceInit.y);
+        pieceInit.position.piece = this;
+        // End Note that these values are only temporary since Position's set method for piece will update piece
+
+        const boardPositionStyles = this.getBoardManager().getBoardPositionStyles(this.x, this.y);
 
         this.color = pieceInit.color;
         this.pieceType = pieceInit.pieceType;
-
-        this.x = pieceInit.x;
-        this.y = pieceInit.y;
 
         this.active = true;
 
@@ -88,30 +63,7 @@ export class Piece implements Coords {
     }
 
     public setPosition(boardPosition: BoardPosition): void {
-        const oldPosition = this.getPosition();
-
-        if (oldPosition.piece === this) {
-            oldPosition.piece = undefined;
-        }
-
-        if (oldPosition.space.piece === this) {
-            oldPosition.space.piece = undefined;
-        }
-
-        this.x = boardPosition.space.x;
-        this.y = boardPosition.space.y;
-
-        this.getPosition = () => {
-            return boardPosition;
-        }
-
         boardPosition.piece = this;
-        boardPosition.space.piece = this;
-
-        const boardPositionStyles = this.getBoardManager().getBoardPositionStyles(boardPosition.space.x, boardPosition.space.y);
-
-        this.left = boardPositionStyles.left;
-        this.top = boardPositionStyles.top;
     }
 
     public resetBoardPositionStyles() {
@@ -529,6 +481,13 @@ export class Piece implements Coords {
         if (this.canMoveToPosition(newPosition)) {
             const oldPosition = this.getPosition();
 
+            if (!oldPosition) {
+                throw {
+                    message: "piece doesn't have oldPosition",
+                    this: this,
+                };
+            }
+
             const otherPiece = newPosition.piece;
             this.setPosition(newPosition);
             let moveNotation = '';
@@ -540,7 +499,7 @@ export class Piece implements Coords {
                 otherPiece.active = false;
 
                 if (this.pieceType === 'pawn') {
-                    moveNotation = `${oldPosition.space.getHorizontalNotation()}x${moveNotation}`;
+                    moveNotation = `${oldPosition.getHorizontalNotation()}x${moveNotation}`;
                 } else {
                     moveNotation = moveNotation.slice(0, 1) + 'x' + moveNotation.slice(1);
                 }
@@ -576,26 +535,19 @@ export class Piece implements Coords {
             };
 
             if (this.pieceType === 'pawn') {
-                if (this.color === 'white' && oldPosition.space.y - newPosition.space.y === 2) {
+                if (this.color === 'white' && oldPosition.y - newPosition.y === 2) {
                     boardHistory.pawnMovedTwoSpaces = true;
-                } else if (this.color === 'black' && newPosition.space.y - oldPosition.space.y === 2) {
+                } else if (this.color === 'black' && newPosition.y - oldPosition.y === 2) {
                     boardHistory.pawnMovedTwoSpaces = true;
                 }
             }
 
-            if (this.color === 'white') {
-                this.getBoardManager().history.push({
-                    'white': boardHistory
-                });
-                this.getBoardManager().turn = 'black';
-            } else {
-                this.getBoardManager().history[this.getBoardManager().history.length - 1].black = boardHistory;
-                this.getBoardManager().turn = 'white';
-            }
+            const boardPositionStyles = this.getBoardManager().getBoardPositionStyles(newPosition.x, newPosition.y);
 
-            console.log(moveNotation, boardHistory);
+            this.left = boardPositionStyles.left;
+            this.top = boardPositionStyles.top;
 
-            return boardHistory;
+            return this.getBoardManager().pushMoveHistroy(boardHistory);
         }
 
         return;

@@ -1,50 +1,50 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CdkDragMove, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
-import { Space } from 'src/app/types/space';
 import { PieceColor } from '@app/types/piece';
+import { BoardPosition } from '@app/types/boardPosition';
 
 export interface DragStarted<T=any> {
     cdkDragStart: CdkDragStart<T>;
-    space: Space | undefined | null;
+    position: BoardPosition | undefined;
 }
 
 export interface DragMoved<T=any> {
     cdkDragMove: CdkDragMove<T>;
-    space: Space | undefined | null;
+    position: BoardPosition | undefined;
 }
 
 export interface DragEnded<T=any> {
     cdkDragEnd: CdkDragEnd<T>;
-    space: Space | undefined | null;
+    position: BoardPosition | undefined;
 }
 
 export type HoverElement = HTMLElement;
 
 @Component({
-    selector: 'moo-draggable-space',
-    templateUrl: './draggableSpace.template.html',
-    styleUrls: ['./draggableSpace.style.scss']
+    selector: 'moo-draggable-position',
+    templateUrl: './draggablePosition.template.html',
+    styleUrls: ['./draggablePosition.style.scss']
 })
-export class DraggableSpaceComponent implements OnInit {
-    private _space: Space | undefined | null;
+export class DraggablePositionComponent implements OnInit {
+    private _position: BoardPosition | undefined;
 
     @Input()
-    public set space(space: Space | undefined | null) {
-        if (this._space && this._space.draggableSpaceComponent === this) {
-            this._space.draggableSpaceComponent = undefined;
+    public set position(position: BoardPosition | undefined) {
+        if (this._position && this._position.draggablePositionComponent === this) {
+            this._position.draggablePositionComponent = undefined;
         }
 
-        this._space = space;
+        this._position = position;
 
-        if (this._space) {
-            this._space.draggableSpaceComponent = this;
+        if (this._position) {
+            this._position.draggablePositionComponent = this;
         }
     }
-    public get space(): Space | undefined | null {
-        return this._space;
+    public get position(): BoardPosition | undefined {
+        return this._position;
     };
 
-    @Input() public hoverSpace?: Space;
+    @Input() public hoverPosition?: BoardPosition;
     @Input() public touchDragging?: boolean;
 
     @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
@@ -61,8 +61,8 @@ export class DraggableSpaceComponent implements OnInit {
     }
 
     public handleDragStarted(event: CdkDragStart<HoverElement>): void {
-        const dragStartedEvent = {
-            space: this.space,
+        const dragStartedEvent: DragStarted<HTMLElement> = {
+            position: this.position,
             cdkDragStart: event,
         };
 
@@ -70,8 +70,8 @@ export class DraggableSpaceComponent implements OnInit {
     }
 
     public handleDragMoved(event: CdkDragMove<HoverElement>): void {
-        const dragMovedEvent = {
-            space: this.space,
+        const dragMovedEvent: DragMoved<HTMLElement> = {
+            position: this.position,
             cdkDragMove: event,
         };
 
@@ -79,8 +79,8 @@ export class DraggableSpaceComponent implements OnInit {
     }
 
     public handleDragEnded(event: CdkDragEnd<HoverElement>): void {
-        const dragEndedEvent = {
-            space: this.space,
+        const dragEndedEvent: DragEnded<HTMLElement> = {
+            position: this.position,
             cdkDragEnd: event,
         };
         

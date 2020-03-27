@@ -1,3 +1,0 @@
-<div [class]="'space' + (((space && space.x || 0) + (space && space.y || 0)) % 2 ? ' odd' : ' even') + (activeSpace === space ? ' active' : '') + (movedFromSpace === space ? ' moved-from' : '') + (movedToSpace === space ? ' moved-to' : '') + (hoverSpace === space ? ' hover' : '') + (hoverStartFromSpace === space ? ' hover-start-from' : '')">
-    <div *ngIf="space && (space.showDot || space.showBigDot)" [class]="'dot' + (space.piece ? ' with-piece' : '') + (space.showBigDot ? ' big-dot' : '')"></div>
-</div>

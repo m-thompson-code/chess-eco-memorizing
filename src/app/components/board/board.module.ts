@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 
 import { BoardComponent } from './board.component';
 
-import { SpaceModule } from '../space/space.module';
-import { PieceModule } from '../piece/piece.module';
-import { DraggableSpaceModule } from '../draggableSpace/draggableSpace.module';
+import { PositionModule } from '@app/components/position/position.module';
+import { PieceModule } from '@app/components/piece/piece.module';
+import { DraggablePositionModule } from '@app/components/draggablePosition/draggablePosition.module';
 
-import { SquareDirective } from '../../directives/square.directive';
+import { SquareDirective } from '@app/directives/square.directive';
 
 @NgModule({
     declarations: [
@@ -17,9 +17,9 @@ import { SquareDirective } from '../../directives/square.directive';
     imports: [
         CommonModule,
 
-        SpaceModule,
+        PositionModule,
         PieceModule,
-        DraggableSpaceModule,
+        DraggablePositionModule,
     ],
     exports: [BoardComponent]
 })

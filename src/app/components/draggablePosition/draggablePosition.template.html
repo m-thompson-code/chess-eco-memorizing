@@ -4,10 +4,10 @@
         (cdkDragEnded)="handleDragEnded($event)"
         (cdkDragMoved)="handleDragMoved($event)"
         cdkDrag>
-        <!-- <ng-container *ngIf="space">
-            {{ space.x }}, {{ space.y }}: {{ space.index }}
+        <!-- <ng-container *ngIf="position">
+            {{ position.x }}, {{ position.y }}: {{ position.index }}
         </ng-container> -->
     </div>
 
-    <div *ngIf="hoverSpace === space" [class]="'hover-overlay' + (touchDragging ? ' touch-dragging' : '')"></div>
+    <div *ngIf="hoverPosition === position" [class]="'hover-overlay' + (touchDragging ? ' touch-dragging' : '')"></div>
 </div>

@@ -2,13 +2,13 @@
     <ng-container *ngIf="boardManager">
         <div [class]="'background-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
             <div *ngFor="let row of boardManager.board; let y = index" [class]="'row' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
-                <moo-space *ngFor="let position of row; let x = index"
-                [activeSpace]="activeSpace" 
-                [movedToSpace]="movedToSpace" 
-                [movedFromSpace]="movedFromSpace" 
-                [hoverStartFromSpace]="hoverStartFromSpace" 
-                [hoverSpace]="hoverSpace" 
-                [space]="position.space"></moo-space>
+                <moo-position *ngFor="let position of row; let x = index"
+                [activePosition]="activePosition" 
+                [movedToPosition]="movedToPosition" 
+                [movedFromPosition]="movedFromPosition" 
+                [hoverStartFromPosition]="hoverStartFromPosition" 
+                [hoverPosition]="hoverPosition" 
+                [position]="position"></moo-position>
             </div>
 
             <ng-container *ngIf="showNotationLabels">
@@ -36,7 +36,7 @@
         
         <div [class]="'draggable-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
             <div *ngFor="let row of boardManager.board; let y = index" [class]="'row' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
-                <moo-draggable-space *ngFor="let position of row; let x = index"
+                <moo-draggable-position *ngFor="let position of row; let x = index"
                 (dragStarted)="handleDragStarted($event)"
                 (dragEnded)="handleDragEnded($event)"
                 (dragMoved)="handleDragMoved($event)"
@@ -44,8 +44,8 @@
                 [turn]="boardManager.turn"
         
                 [touchDragging]="touchDragging"
-                [hoverSpace]="hoverSpace"
-                [space]="position.space" (click)="handleClickingDraggable(position)"></moo-draggable-space>
+                [hoverPosition]="hoverPosition"
+                [position]="position" (click)="handleClickingDraggable(position)"></moo-draggable-position>
             </div>
         </div>
     </ng-container>

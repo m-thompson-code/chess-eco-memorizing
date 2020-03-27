@@ -1,5 +1,5 @@
-import { Space } from './space';
 import { Piece, PieceColor, PieceType, PieceInit } from './piece';
+import { BoardPosition } from '@app/types/boardPosition';
 
 export type BoardOrientation = 'normal' | 'flipped';
 
@@ -17,11 +17,6 @@ export interface BoardPositionStyles {
     top: string;
 }
 
-export interface BoardPosition {
-    space: Space;
-    piece?: Piece;
-}
-
 export type Board = {
     [y: number] : {
         [x: number] : BoardPosition;
@@ -30,29 +25,36 @@ export type Board = {
 
 export class BoardManager {
     board: Board;
-
     pieces: Piece[];
-
-    boardOrientation: BoardOrientation;
 
     history: {
         'white' : BoardHistory;
         'black'? : BoardHistory;
     }[];
+    
+    turnCount: number;
 
     turn: PieceColor;
 
+    blackKingIsInCheck: boolean;
+    whiteKingIsInCheck: boolean;
+
+    boardOrientation: BoardOrientation;
     showingDotsFor?: Piece;
 
-    constructor(boardOrientation?: BoardOrientation, board?: Board) {
+    constructor(boardOrientation?: BoardOrientation) {
         this.boardOrientation = boardOrientation || 'normal';
 
         this.board = this._getInitalizedBoard();
         this.pieces = [];
 
         this.history = [];
+        this.turnCount = 0;
 
         this.turn = 'white';
+
+        this.blackKingIsInCheck = false;
+        this.whiteKingIsInCheck = false;
 
         this.setStartingPieces();
     }
@@ -64,7 +66,7 @@ export class BoardManager {
 
         for (const row of this.board) {
             for (const position of row) {
-                position.space.showDot = false;
+                position.showDot = false;
             }
         }
 
@@ -82,7 +84,7 @@ export class BoardManager {
         this.hideMovementDots();
 
         for (const position of moves) {
-            position.space.showDot = true;
+            position.showDot = true;
         }
 
         this.showingDotsFor = piece;
@@ -97,38 +99,35 @@ export class BoardManager {
     }
 
     public pushPiece(color: PieceColor, pieceType: PieceType, x: number, y: number): Piece {
-        const _position: BoardPosition | undefined = this.getPosition(x, y);
+        const position: BoardPosition | undefined = this.getPosition(x, y);
 
-        if (!_position) {
+        if (!position) {
             throw {
                 message: `Position doesn't exist`,
                 x: x,
                 y: y,
-                _position: _position,
+                position: position,
                 color: color,
                 pieceType: pieceType,
             };
         }
 
-        if (_position.piece) {
+        if (position.piece) {
             throw {
                 message: 'Piece already exists on this position',
                 x: x,
                 y: y,
-                _position: _position,
+                position: position,
                 color: color,
                 pieceType: pieceType,
             };
         }
 
         const pieceInit: PieceInit = {
-            x: x,
-            y: y,
+            position: position,
             color: color,
             pieceType: pieceType,
-            getBoard: () => {
-                return this;
-            },
+            boardManager: this,
         };
 
         const piece: Piece = new Piece(pieceInit);
@@ -209,7 +208,7 @@ export class BoardManager {
             board.push([]);
 
             for (let _x = 0; _x < 8; _x++) {
-                const space: Space = new Space({
+                const position: BoardPosition = new BoardPosition({
                     x:_x, 
                     y:_y,
                     getBoard: () => {
@@ -217,9 +216,7 @@ export class BoardManager {
                     },
                 });
 
-                board[_y].push({
-                    space: space,
-                });
+                board[_y].push(position);
             }
         }
 
@@ -279,5 +276,66 @@ export class BoardManager {
         }
 
         return false;
+    }
+
+    public popMoveHistroy(): BoardHistory | undefined {
+        if (!this.turnCount) {
+            return;
+        }
+
+        let boardHistory: BoardHistory | undefined = undefined;
+
+        const whiteMove: boolean = this.turn === 'white';//!(this.turnCount % 2);//this.color === 'white';
+
+        if (whiteMove) {
+            boardHistory = this.history[this.history.length - 1].black;
+            this.history[this.history.length - 1].black = undefined;
+
+            this.turn = 'black';
+            this.blackKingIsInCheck = this.kingIsInCheck('black');
+        } else {
+            boardHistory = this.history.pop()?.white;
+
+            this.turn = 'white';
+            this.whiteKingIsInCheck = this.kingIsInCheck('white');
+        }
+
+        console.log(boardHistory);
+
+        if (boardHistory) {
+            if (boardHistory.capturedPiece) {
+                boardHistory.capturedPiece.active = true;
+            }
+
+            boardHistory.movingPiece.setPosition(boardHistory.oldPosition);
+        }
+
+        this.turnCount -= 1;
+
+        return boardHistory;
+    }
+
+    public pushMoveHistroy(boardHistory: BoardHistory): BoardHistory {
+        const whiteMove: boolean = this.turn === 'white';//!(this.turnCount % 2);//this.color === 'white';
+
+        if (whiteMove) {
+            this.history.push({
+                'white': boardHistory
+            });
+            this.turn = 'black';
+            this.blackKingIsInCheck = this.kingIsInCheck('black');
+
+        } else {
+            this.history[this.history.length - 1].black = boardHistory;
+            this.turn = 'white';
+            this.whiteKingIsInCheck = this.kingIsInCheck('white');
+        }
+
+        console.log(boardHistory);
+
+
+        this.turnCount += 1;
+
+        return boardHistory;
     }
 }

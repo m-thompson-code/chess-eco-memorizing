@@ -1,4 +1,4 @@
-.space {
+.position {
     flex-grow: 1;
     height: 100%;
     width: 100%;
@@ -9,39 +9,39 @@
     position: relative;
 }
 
-.space.odd {
+.position.odd {
     background: #779556;
 }
 
-.space.even {
+.position.even {
     background: #EBECD0;
 }
 
-.space.active {
+.position.active {
     background: orange;
     color: black;
 }
 
-.space.hover-start-from {
+.position.hover-start-from {
     background: yellow;
     color: black;
 }
 
-.space.hover-start-from {
+.position.hover-start-from {
     background: yellow;
     color: black;
 }
 
-.space.hover {
+.position.hover {
     color: white;
 }
 
-.space.moved-from {
+.position.moved-from {
     background: yellowgreen;
     color: black;
 }
 
-.space.moved-to {
+.position.moved-to {
     background: yellowgreen;
 
     color: white;

@@ -1,9 +1,9 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { BoardManager, BoardPosition } from '@app/types/board';
+import { BoardManager } from '@app/types/board';
 import { Piece } from '@app/types/piece';
-import { Space, Coords } from '@app/types/space';
+import { BoardPosition, Coords } from '@app/types/boardPosition';
 
-import { DragMoved, DragStarted, DragEnded, HoverElement } from '../space/space.component';
+import { DragMoved, DragStarted, DragEnded, HoverElement } from '../position/position.component';
 
 @Component({
     selector: 'moo-board',
@@ -23,13 +23,13 @@ export class BoardComponent implements OnInit {
     public hoverX: number = 0;
     public hoverY: number = 0;
 
-    public activeSpace?: Space;
+    public activePosition?: BoardPosition;
 
-    public movedToSpace?: Space;
-    public movedFromSpace?: Space;
+    public movedToPosition?: BoardPosition;
+    public movedFromPosition?: BoardPosition;
 
-    public hoverStartFromSpace?: Space;
-    public hoverSpace?: Space;
+    public hoverStartFromPosition?: BoardPosition;
+    public hoverPosition?: BoardPosition;
 
     public draggingPiece?: Piece;
 
@@ -61,7 +61,7 @@ export class BoardComponent implements OnInit {
         };
     }
 
-    public movePiece(piece: Piece, space: Space): void {
+    public movePiece(piece: Piece, newPosition: BoardPosition): void {
         if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
@@ -69,20 +69,19 @@ export class BoardComponent implements OnInit {
         }
 
         this.draggingPiece = undefined;
-        this.hoverSpace = undefined;
-        this.hoverStartFromSpace = undefined;
+        this.hoverPosition = undefined;
+        this.hoverStartFromPosition = undefined;
     
         piece.dragging = false;
         piece.touchDragging = false;
 
         const oldPosition = piece.getPosition();
-        const newPosition = space.getPosition();
 
-        // Exit early / activate other space with same team piece
+        // Exit early / activate other position with same team piece
         if (newPosition.piece) {
             if (newPosition.piece.color === piece.color) {
                 piece.resetBoardPositionStyles();
-                this.activateSpace(space);
+                this.activatePosition(newPosition);
                 return;
             }
         }
@@ -90,13 +89,13 @@ export class BoardComponent implements OnInit {
         const moved = piece.moveToPosition(newPosition);
 
         if (moved) {
-            this.movedFromSpace = oldPosition.space;
-            this.movedToSpace = space;
+            this.movedFromPosition = oldPosition;
+            this.movedToPosition = newPosition;
         } else {
             piece.resetBoardPositionStyles();
         }
 
-        this.boardManager.hideMovementDots();
+        this.deactivatePosition();
     }
 
     dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
@@ -105,21 +104,20 @@ export class BoardComponent implements OnInit {
                 message: "Unexpected missing board",
             }
         }
-        // TODO: check other pieces and drop them
 
         const width = dragMovedEvent.cdkDragMove.source.element.nativeElement.offsetWidth;
 
-        let spaceOffsetX = (this.boardManager.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.x) : dragMovedEvent.space.x) * width;
-        let spaceOffsetY = (this.boardManager.boardOrientation === 'flipped' ? (7 - dragMovedEvent.space.y) : dragMovedEvent.space.y) * width;
+        let positionOffsetX = (this.boardManager.boardOrientation === 'flipped' ? (7 - dragMovedEvent.position.x) : dragMovedEvent.position.x) * width;
+        let positionOffsetY = (this.boardManager.boardOrientation === 'flipped' ? (7 - dragMovedEvent.position.y) : dragMovedEvent.position.y) * width;
 
-        const draggedSpaceOffsetX = spaceOffsetX + dragMovedEvent.cdkDragMove.distance.x;
-        const draggedSpaceOffsetY = spaceOffsetY + dragMovedEvent.cdkDragMove.distance.y;
+        const draggedPositionOffsetX = positionOffsetX + dragMovedEvent.cdkDragMove.distance.x;
+        const draggedPositionOffsetY = positionOffsetY + dragMovedEvent.cdkDragMove.distance.y;
 
         if (dragMovedEvent.cdkDragMove.event.type === 'touchmove') {
             piece.touchDragging = true;
 
-            const pointerOffsetX = draggedSpaceOffsetX + (this.xDelta || 0) - width / 2;
-            const pointerOffsetY = draggedSpaceOffsetY + (this.yDelta || 0) - width / 2;
+            const pointerOffsetX = draggedPositionOffsetX + (this.xDelta || 0) - width / 2;
+            const pointerOffsetY = draggedPositionOffsetY + (this.yDelta || 0) - width / 2;
 
             const left = pointerOffsetX;
             const top = pointerOffsetY;
@@ -127,8 +125,8 @@ export class BoardComponent implements OnInit {
             piece.top = `${top}px`;
             piece.left = `${left}px`;
         } else {
-            const left = draggedSpaceOffsetX;
-            const top = draggedSpaceOffsetY;
+            const left = draggedPositionOffsetX;
+            const top = draggedPositionOffsetY;
 
             piece.top = `${top}px`;
             piece.left = `${left}px`;
@@ -137,7 +135,7 @@ export class BoardComponent implements OnInit {
         piece.dragging = true;        
     }
 
-    public updateHoverSpace(dragMovedEvent: DragMoved): void {
+    public updateHoverPosition(dragMovedEvent: DragMoved): void {
         if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
@@ -148,8 +146,8 @@ export class BoardComponent implements OnInit {
 
         const width = event.source.element.nativeElement.offsetWidth;
 
-        let _x = this.hoverStartFromSpace && this.hoverStartFromSpace.x || 0;
-        let _y = this.hoverStartFromSpace && this.hoverStartFromSpace.y || 0;
+        let _x = this.hoverStartFromPosition && this.hoverStartFromPosition.x || 0;
+        let _y = this.hoverStartFromPosition && this.hoverStartFromPosition.y || 0;
 
         let _xDelta = 0;
         let _yDelta = 0;
@@ -195,34 +193,33 @@ export class BoardComponent implements OnInit {
             }
         }
 
-        this.hoverSpace = hoverPosition.space;
+        this.hoverPosition = hoverPosition;
     }
 
-    public activateSpace(space: Space): void {
+    public activatePosition(position: BoardPosition): void {
         if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
             }
         }
 
-        if (this.activeSpace !== space.piece) {
-            this.activeSpace = space;
+        this.activePosition = position;
 
-            if (space.piece) {
-                this.boardManager.showMovementDots(space.piece);
-            }
+        if (position.piece) {
+            this.boardManager.showMovementDots(position.piece);
         }
     }
     
-    public deactivateSpace(): void {
+    public deactivatePosition(): void {
         if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
             }
         }
 
-        if (this.activeSpace) {
-            this.activeSpace = undefined;
+        if (this.activePosition) {
+            this.activePosition = undefined;
+
             this.boardManager.hideMovementDots();
         }
     }
@@ -234,15 +231,15 @@ export class BoardComponent implements OnInit {
             };
         }
 
-        this.hoverStartFromSpace = undefined;
-        this.hoverSpace = undefined;
+        this.hoverStartFromPosition = undefined;
+        this.hoverPosition = undefined;
 
-        if (!dragStartedEvent.space || !dragStartedEvent.space.piece || dragStartedEvent.space.piece.color !== this.boardManager.turn) {
-            this.hoverStartFromSpace = undefined;
-            this.hoverSpace = undefined;
+        if (!dragStartedEvent.position || !dragStartedEvent.position.piece || dragStartedEvent.position.piece.color !== this.boardManager.turn) {
+            this.hoverStartFromPosition = undefined;
+            this.hoverPosition = undefined;
             this.dragging = false;
             this.touchDragging = false;
-            this.deactivateSpace();
+            this.deactivatePosition();
             return;
         }
 
@@ -250,10 +247,10 @@ export class BoardComponent implements OnInit {
 
         event.source.element.nativeElement.classList.add('active');
 
-        this.hoverStartFromSpace = dragStartedEvent.space;
-        this.hoverSpace = undefined;
+        this.hoverStartFromPosition = dragStartedEvent.position;
+        this.hoverPosition = undefined;
 
-        this.activateSpace(dragStartedEvent.space);
+        this.activatePosition(dragStartedEvent.position);
 
         return this.dragStarted.emit(dragStartedEvent);
     }
@@ -265,12 +262,12 @@ export class BoardComponent implements OnInit {
             }
         }
 
-        if (!dragMovedEvent.space || !dragMovedEvent.space.piece || dragMovedEvent.space.piece.color !== this.boardManager.turn) {
-            this.hoverStartFromSpace = undefined;
-            this.hoverSpace = undefined;
+        if (!dragMovedEvent.position || !dragMovedEvent.position.piece || dragMovedEvent.position.piece.color !== this.boardManager.turn) {
+            this.hoverStartFromPosition = undefined;
+            this.hoverPosition = undefined;
             this.dragging = false;
             this.touchDragging = false;
-            this.deactivateSpace();
+            this.deactivatePosition();
             return;
         }
 
@@ -286,7 +283,7 @@ export class BoardComponent implements OnInit {
             this.yDelta = yDelta || 0;
         }
 
-        this.updateHoverSpace(dragMovedEvent);
+        this.updateHoverPosition(dragMovedEvent);
 
         this.dragging = true;
 
@@ -296,7 +293,7 @@ export class BoardComponent implements OnInit {
 
         this.pointerPosition = event.pointerPosition;
 
-        this.draggingPiece = dragMovedEvent.space.piece;
+        this.draggingPiece = dragMovedEvent.position.piece;
 
         if (this.draggingPiece) {
             this.dragPiece(this.draggingPiece, dragMovedEvent);
@@ -315,12 +312,12 @@ export class BoardComponent implements OnInit {
         this.dragging = false;
         this.touchDragging = false;
 
-        if (!dragEndedEvent.space || !dragEndedEvent.space.piece || dragEndedEvent.space.piece.color !== this.boardManager.turn) {
-            this.hoverStartFromSpace = undefined;
-            this.hoverSpace = undefined;
+        if (!dragEndedEvent.position || !dragEndedEvent.position.piece || dragEndedEvent.position.piece.color !== this.boardManager.turn) {
+            this.hoverStartFromPosition = undefined;
+            this.hoverPosition = undefined;
             this.dragging = false;
             this.touchDragging = false;
-            this.deactivateSpace();
+            this.deactivatePosition();
             return;
         }
 
@@ -328,12 +325,12 @@ export class BoardComponent implements OnInit {
 
         event.source.element.nativeElement.classList.remove('active');
 
-        if (this.draggingPiece && this.hoverSpace) {
-            this.movePiece(this.draggingPiece, this.hoverSpace);
+        if (this.draggingPiece && this.hoverPosition) {
+            this.movePiece(this.draggingPiece, this.hoverPosition);
         }
 
-        this.hoverSpace = undefined;
-        this.hoverStartFromSpace = undefined;
+        this.hoverPosition = undefined;
+        this.hoverStartFromPosition = undefined;
 
         this.xDelta = undefined;
         this.yDelta = undefined;
@@ -342,8 +339,8 @@ export class BoardComponent implements OnInit {
     }
 
     public handleClickingDraggable(position: BoardPosition): void {
-        if (this.activeSpace && this.activeSpace.piece) {
-            this.movePiece(this.activeSpace.piece, position.space);
+        if (this.activePosition && this.activePosition.piece) {
+            this.movePiece(this.activePosition.piece, position);
             return;
         }
 
@@ -358,7 +355,7 @@ export class BoardComponent implements OnInit {
         }
 
         if (this.boardManager.turn === position.piece.color) {
-            this.activateSpace(position.space);
+            this.activatePosition(position);
         }
     }
 }
