@@ -34,7 +34,7 @@
             </div>
         </div>
         
-        <div [class]="'draggable-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
+        <div [class]="'draggable-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')" cdkDragBoundary>
             <div *ngFor="let row of boardManager.board; let y = index" [class]="'row' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
                 <moo-draggable-position *ngFor="let position of row; let x = index"
                 (dragStarted)="handleDragStarted($event)"
@@ -49,4 +49,13 @@
             </div>
         </div>
     </ng-container>
+
+    <div *ngIf="showPromotionSelect" class="promotion-select-container">
+        <div class="promotion-select-background-overlay" (click)="selectPromotion()"></div>
+        <div class="promotion-select-overlay">
+            <div *ngFor="let pieceType of ['rook', 'knight', 'bishop', 'queen']" class="promotion-select" (click)="selectPromotion(pieceType)">
+                <img [src]="'assets/pieces/' + (promotionColor || 'unknown') + '_' + (pieceType || 'unknown') + '.png'">
+            </div>
+        </div>
+    </div>
 </div>

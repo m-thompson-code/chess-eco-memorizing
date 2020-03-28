@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { BoardManager } from '@app/types/board';
-import { Piece } from '@app/types/piece';
+import { Piece, PromotePieceType, PieceColor } from '@app/types/piece';
 import { BoardPosition, Coords } from '@app/types/boardPosition';
 
 import { DragMoved, DragStarted, DragEnded, HoverElement } from '../position/position.component';
@@ -41,6 +41,11 @@ export class BoardComponent implements OnInit {
     verticalNotationlabels: number[];
     horizontalNotationlabels: string[];
 
+    showPromotionSelect: boolean;
+    selectPromotionResolve?: (promotePieceType?: PromotePieceType) => void;
+    selectPromotionReject?: (error: any)=>void;
+    promotionColor: PieceColor;
+
     constructor() {
         this.dragging = false;
         this.touchDragging = false;
@@ -48,6 +53,9 @@ export class BoardComponent implements OnInit {
 
         this.verticalNotationlabels = [8, 7, 6, 5, 4, 3, 2, 1];
         this.horizontalNotationlabels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+        this.showPromotionSelect = false;
+        this.promotionColor = 'white';
     }
 
     public ngOnInit() {
@@ -56,13 +64,75 @@ export class BoardComponent implements OnInit {
         };
     }
 
-    public movePiece(piece: Piece, newPosition: BoardPosition): void {
+    public async movePiece(piece: Piece, newPosition: BoardPosition): Promise<void> {
         if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
             };
         }
 
+        // Promotion check
+        if (piece.pieceType === 'pawn' && (newPosition.showDot || newPosition.showBigDot)) {
+            if (piece.color === 'white' && newPosition.y === 0 || piece.color === 'black' && newPosition.y === 7) {
+                return this.getPromotionPieceType(piece.color).then(promotionPieceType => {
+                    console.log(promotionPieceType);
+                    if (promotionPieceType) {
+                        return this._movePiece(piece, newPosition, promotionPieceType);
+                    }
+
+                    this.draggingPiece = undefined;
+                    this.hoverPosition = undefined;
+                    this.hoverStartFromPosition = undefined;
+                
+                    piece.dragging = false;
+                    piece.touchDragging = false;
+
+                    piece.resetBoardPositionStyles();
+                    const oldPosition = piece.getPosition();
+
+                    if (oldPosition) {
+                        this.activatePosition(oldPosition);
+                    }
+                });
+            }
+        }
+
+        // For everything else
+        return Promise.resolve().then(() => {
+            this._movePiece(piece, newPosition);
+        });
+    }
+
+    public getPromotionPieceType(promotionColor: PieceColor): Promise<PromotePieceType | undefined> {
+        this.showPromotionSelect = true;
+        this.promotionColor = promotionColor;
+        return new Promise((resolve, reject) => {
+            this.selectPromotionResolve = resolve;
+            this.selectPromotionReject = reject;
+        });
+    }
+
+    public selectPromotion(promotionPieceType?: PromotePieceType): PromotePieceType | undefined {
+        try {
+            this.showPromotionSelect = false;
+
+            if (this.selectPromotionResolve) {
+                this.selectPromotionResolve(promotionPieceType);
+            }
+        }catch(error) {
+            console.error(error);
+
+            if (this.selectPromotionReject) {
+                this.selectPromotionReject(error);
+            } else {
+                throw error;
+            }
+        }
+        
+        return promotionPieceType;
+    }
+
+    private _movePiece(piece: Piece, newPosition: BoardPosition, promotionPieceType?: PromotePieceType): void {
         this.draggingPiece = undefined;
         this.hoverPosition = undefined;
         this.hoverStartFromPosition = undefined;
@@ -77,13 +147,11 @@ export class BoardComponent implements OnInit {
             return;
         }
 
-        const moved = piece.moveToPosition(newPosition, true);
+        const moved = piece.moveToPosition(newPosition, true, promotionPieceType);
 
         if (!moved) {
             piece.resetBoardPositionStyles();
         }
-
-        // this.deactivatePosition();
     }
 
     dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
@@ -290,7 +358,7 @@ export class BoardComponent implements OnInit {
         return this.dragMoved.emit(dragMovedEvent);
     }
     
-    public handleDragEnded(dragEndedEvent: DragEnded): void {
+    public async handleDragEnded(dragEndedEvent: DragEnded): Promise<void> {
         if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
@@ -306,7 +374,7 @@ export class BoardComponent implements OnInit {
             this.dragging = false;
             this.touchDragging = false;
             this.deactivatePosition();
-            return;
+            return;// Promise.resolve();
         }
 
         const event = dragEndedEvent.cdkDragEnd;
@@ -314,7 +382,7 @@ export class BoardComponent implements OnInit {
         event.source.element.nativeElement.classList.remove('active');
 
         if (this.draggingPiece && this.hoverPosition) {
-            this.movePiece(this.draggingPiece, this.hoverPosition);
+            await this.movePiece(this.draggingPiece, this.hoverPosition);
         }
 
         this.hoverPosition = undefined;
@@ -326,7 +394,7 @@ export class BoardComponent implements OnInit {
         return this.dragEnded.emit(dragEndedEvent);
     }
 
-    public handleClickingDraggable(position: BoardPosition): void {
+    public async handleClickingDraggable(position: BoardPosition): Promise<void> {
         if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
@@ -334,8 +402,7 @@ export class BoardComponent implements OnInit {
         }
 
         if (this.boardManager.activePosition && this.boardManager.activePosition.piece) {
-            this.movePiece(this.boardManager.activePosition.piece, position);
-            return;
+            return await this.movePiece(this.boardManager.activePosition.piece, position);
         }
 
         if (!position.piece) {

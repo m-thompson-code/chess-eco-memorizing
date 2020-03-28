@@ -3,6 +3,7 @@ import { BoardPosition, Coords, GetBoardManagerFunc, GetBoardPositionFunc } from
 
 export type PieceColor = 'white' | 'black';
 export type PieceType = 'bishop' | 'king' | 'knight' | 'pawn' | 'queen' | 'rook';
+export type PromotePieceType = 'bishop' | 'knight' | 'queen' | 'rook';
 
 export interface PieceInit {
     position: BoardPosition;
@@ -821,7 +822,11 @@ export class Piece implements Coords {
         return undefined;
     }
 
-    public moveToPosition(newPosition: BoardPosition, updateUI: boolean): BoardHistory | undefined {
+    // public promotePiece(piece: Piece, pieceType: PieceType, newPosition: BoardPosition) {
+
+    // }
+
+    public moveToPosition(newPosition: BoardPosition, updateUI: boolean, promotePieceType?: PromotePieceType): BoardHistory | undefined {
         if (!this.canMoveToPosition(newPosition)) {
             return;
         }
@@ -842,24 +847,102 @@ export class Piece implements Coords {
 
         let enPassanteData: undefined | {pawn: Piece, oldPawnPosition: BoardPosition} = undefined;
 
-        // This move is a general move (not En Passante or Casting)
+        // This move is a general move (not Casting)
         if (!boardHistory) {
-            let moveNotation = '';
+            let moveNotation = this.getNotationName();// this.getNotationPosition();
+
+            // Disambiguating moves (two or more identical pieces can move to the same square)
+            // 1. Check horizontal notation
+            // 2. Check vertical notation
+            // 3. Check both
+            const pieces = this.getBoardManager().pieces;
+            let filteredPieces: Piece[] = [];
+
+            for (const piece of pieces) {
+                if (piece === this) {
+                    continue;
+                }
+
+                if (!piece.active || piece.color !== this.color || piece.pieceType !== this.pieceType) {
+                    continue;
+                }
+                
+                const availableMoves = piece.getAvailableMoves(true, true);
+
+                if (!availableMoves.includes(newPosition)) {
+                    continue;
+                }
+                
+                filteredPieces.push(piece);
+            }
+            console.log(filteredPieces);
+
+            // 1. Check horizontal notation
+            if (filteredPieces.length) {
+                let found = false;
+                const h = this.getHorizontalNotation();
+                for (const piece of filteredPieces) {
+                    if (h === piece.getHorizontalNotation()) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    moveNotation += h;
+
+                    filteredPieces = [];
+                }
+            }
+
+            // 2. Check vertical notation
+            if (filteredPieces.length) {
+                let found = false;
+                const v = this.getVerticalNotation();
+                for (const piece of filteredPieces) {
+                    if (v === piece.getVerticalNotation()) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    moveNotation += v;
+
+                    filteredPieces = [];
+                }
+            }
+
+            // 3. Check both
+            if (filteredPieces.length) {
+                let found = false;
+                const v = this.getVerticalNotation();
+                const h = this.getHorizontalNotation();
+                for (const piece of filteredPieces) {
+                    if (h === piece.getHorizontalNotation() && v === piece.getVerticalNotation()) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    moveNotation += h + v;
+                    filteredPieces = [];
+                }
+            }
+            
             const capturedPiece = newPosition.piece;
 
             this.setPosition(newPosition);
-
-            moveNotation += this.getNotationPosition();
 
             // Capture
             if (capturedPiece) {
                 capturedPiece.active = false;
 
-                if (this.pieceType === 'pawn') {
-                    moveNotation = `${oldPosition.getHorizontalNotation()}x${moveNotation}`;
-                } else {
-                    moveNotation = moveNotation.slice(0, 1) + 'x' + moveNotation.slice(1);
+                if (!moveNotation) {
+                    moveNotation = oldPosition.getHorizontalNotation();
                 }
+                moveNotation += 'x';
             } else {
                 // Check En Passante
                 if (this.pieceType === 'pawn') {
@@ -885,7 +968,10 @@ export class Piece implements Coords {
     
                         _enPassantePawn.active = false;
     
-                        moveNotation = moveNotation.slice(0, 1) + 'x' + moveNotation.slice(1);
+                        if (!moveNotation) {
+                            moveNotation = oldPosition.getHorizontalNotation();
+                        }
+                        moveNotation += 'x';
     
                         enPassanteData = {
                             pawn: _enPassantePawn,
@@ -911,7 +997,10 @@ export class Piece implements Coords {
     
                         _enPassantePawn.active = false;
     
-                        moveNotation = moveNotation.slice(0, 1) + 'x' + moveNotation.slice(1);
+                        if (!moveNotation) {
+                            moveNotation = oldPosition.getHorizontalNotation();
+                        }
+                        moveNotation += 'x';
     
                         enPassanteData = {
                             pawn: _enPassantePawn,
@@ -923,23 +1012,56 @@ export class Piece implements Coords {
                 }
             }
 
-            // Disambiguating moves (two or more identical pieces can move to the same square)
-            // TODO
+            moveNotation += newPosition.getHorizontalNotation() + newPosition.getVerticalNotation();
+
+            let promotePieceData: {
+                pieceType: PromotePieceType;
+            } | undefined = undefined;
 
             // Pawn promotion
-            // TODO
-            // moveNotation += '/Q';
+            if (this.color === 'white' && newPosition.y === 0 || this.color === 'black' && newPosition.y === 7) {
+                if (!promotePieceType) {
+                    throw {
+                        message: "Unexpected missing promotePieceType",
+                        promotePieceType: promotePieceType,
+                        piece: this,
+                    };
+                }
+                
+                this.pieceType = promotePieceType;
+                moveNotation += '=' + this.getNotationName();
+
+                promotePieceData = {
+                    pieceType: promotePieceType
+                };
+            }
 
             // Check
             const putsEnemyInCheck = this.getBoardManager().kingIsThreatened(this.color === 'white' ? 'black' : 'white');
 
             if (putsEnemyInCheck) {
-                moveNotation += '+';
-            }
+                const pieces = this.getBoardManager().pieces;
 
-            // Checkmate
-            // TODO
-            // moveNotation += '#';
+                let foundAvailableEnemyMove = false;
+                for (const piece of pieces) {
+                    if (!piece.active || piece.color === this.color) {
+                        continue;
+                    }
+
+                    const availableMoves = piece.getAvailableMoves(true, false);
+
+                    if (!availableMoves.length) {
+                        continue;
+                    }
+                }
+
+                if (foundAvailableEnemyMove) {
+                    moveNotation += '+';
+                } else {
+                    // Checkmate
+                    moveNotation += '#';
+                }
+            }
 
             boardHistory = {
                 moveNotation: moveNotation,
@@ -959,6 +1081,10 @@ export class Piece implements Coords {
 
             if (enPassanteData) {
                 boardHistory.enPassante = enPassanteData;
+            }
+            
+            if (promotePieceData) {
+                boardHistory.promote = promotePieceData;
             }
         }
         

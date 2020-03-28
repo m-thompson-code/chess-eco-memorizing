@@ -1,4 +1,4 @@
-import { Piece, PieceColor, PieceType, PieceInit } from './piece';
+import { Piece, PieceColor, PieceType, PieceInit, PromotePieceType } from './piece';
 import { BoardPosition } from '@app/types/boardPosition';
 
 export type BoardOrientation = 'normal' | 'flipped';
@@ -17,6 +17,9 @@ export interface BoardHistory {
     enPassante?: {
         pawn: Piece;
         oldPawnPosition: BoardPosition;
+    };
+    promote?: {
+        pieceType: PromotePieceType;
     };
 }
 
@@ -382,6 +385,11 @@ export class BoardManager {
 
             const _movingPiece = boardHistory.movingPiece;
             _movingPiece.setPosition(boardHistory.oldPosition);
+
+            if (boardHistory.promote) {
+                _movingPiece.pieceType = 'pawn';
+            }
+
             _movingPiece.moveCount -= 1;
         }
 
@@ -510,7 +518,7 @@ export class BoardManager {
     
             const pieceType = this.getPieceTypeFromNotationLetter(firstLetter);
     
-            const filteredPieces = [];
+            let filteredPieces = [];
     
             let _notation = notation;
     
@@ -519,43 +527,120 @@ export class BoardManager {
             }
             
             movementNotation = _notation.substring(_notation.length - 2, _notation.length);
-    
-            for (const piece of this.pieces) {
-                if (piece.pieceType === pieceType) {
-                    filteredPieces.push(piece);
+
+            const moveToPosition = this.getPositionByNotation(movementNotation);
+
+            if (!moveToPosition) {
+                throw {
+                    message: "Unexpected moveToPosition",
+                    moveToPosition: moveToPosition,
+                    notation: notation,
+                    _notation: _notation,
                 }
             }
-    
-            const moveToPosition = this.getPositionByNotation(movementNotation);
-    
-            const _filteredPieces = [];
-    
-            if (moveToPosition) {
+
+            for (const piece of this.pieces) {
+                if (!piece.active || piece.color !== this.turn || piece.pieceType !== pieceType) {
+                    continue;
+                }
+
+                const availableMoves = piece.getAvailableMoves(true, true);
+
+                if (!availableMoves.includes(moveToPosition)) {
+                    continue;
+                }
+
+                filteredPieces.push(piece);
+            }
+
+            if (filteredPieces.length > 1) {
+                const _filteredPieces: Piece[] = [];
+
                 for (const piece of filteredPieces) {
-                    const availableMoves = piece.getAvailableMoves(true, true);
-    
-                    if (availableMoves.includes(moveToPosition)) {
+                    const h = piece.getHorizontalNotation();
+                    let letters = piece.getNotationName();
+
+                    if (letters !== h) {
+                        letters += h;
+                    }
+
+                    console.log(letters, _notation);
+
+                    if (_notation.startsWith(letters)) {
                         _filteredPieces.push(piece);
                     }
                 }
 
-                if (_filteredPieces.length === 1) {
-                    boardHistory = _filteredPieces[0].moveToPosition(moveToPosition, true);
+                console.log(_filteredPieces);
 
-                    if (boardHistory?.moveNotation !== notation) {
-                        console.error("Mismatch notations", boardHistory?.moveNotation, notation);
-                    }
-                    return _filteredPieces[0].moveToPosition(moveToPosition, true);
+                if (_filteredPieces.length === 1) {
+                    filteredPieces = _filteredPieces;
                 }
+            }
+
+            if (filteredPieces.length > 1) {
+                const _filteredPieces: Piece[] = [];
+
+                for (const piece of filteredPieces) {
+                    const v = piece.getVerticalNotation();
+                    let letters = piece.getNotationName() + v;
+
+                    console.log(letters, _notation);
+
+                    if (_notation.startsWith(letters)) {
+                        _filteredPieces.push(piece);
+                    }
+                }
+
+                console.log(_filteredPieces);
+
+
+                if (_filteredPieces.length === 1) {
+                    filteredPieces = _filteredPieces;
+                }
+            }
+            
+            if (filteredPieces.length > 1) {
+                const _filteredPieces: Piece[] = [];
+
+                for (const piece of filteredPieces) {
+                    let letters = piece.getNotationPosition();
+
+                    console.log(letters, _notation);
+
+                    if (_notation.startsWith(letters)) {
+                        _filteredPieces.push(piece);
+                    }
+                }
+
+                console.log(_filteredPieces);
+
+                if (_filteredPieces.length === 1) {
+                    filteredPieces = _filteredPieces;
+                }
+            }
+
+            if (filteredPieces.length === 1) {
+                boardHistory = filteredPieces[0].moveToPosition(moveToPosition, true);
+
+                if (boardHistory?.moveNotation !== notation) {
+                    console.error("Mismatch notations", boardHistory?.moveNotation, notation);
+                    if (boardHistory) {
+                        this.popMoveHistroy(true);
+                    }
+                    return;
+                }
+
+                return filteredPieces[0].moveToPosition(moveToPosition, true);
             }
     
             throw {
                 message: "Nope",
                 filteredPieces: filteredPieces,
-                _filteredPieces: _filteredPieces,
                 pieceType: pieceType,
                 movementNotation: movementNotation,
                 firstLetter: firstLetter,
+                moveToPosition: moveToPosition,
             };
         }
 
