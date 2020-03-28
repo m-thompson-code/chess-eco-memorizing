@@ -875,7 +875,7 @@ export class Piece implements Coords {
                 
                 filteredPieces.push(piece);
             }
-            console.log(filteredPieces);
+            // console.log(filteredPieces);
 
             // 1. Check horizontal notation
             if (filteredPieces.length) {

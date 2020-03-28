@@ -75,7 +75,7 @@ export class BoardComponent implements OnInit {
         if (piece.pieceType === 'pawn' && (newPosition.showDot || newPosition.showBigDot)) {
             if (piece.color === 'white' && newPosition.y === 0 || piece.color === 'black' && newPosition.y === 7) {
                 return this.getPromotionPieceType(piece.color).then(promotionPieceType => {
-                    console.log(promotionPieceType);
+                    // console.log(promotionPieceType);
                     if (promotionPieceType) {
                         return this._movePiece(piece, newPosition, promotionPieceType);
                     }

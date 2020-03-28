@@ -484,9 +484,7 @@ export class BoardManager {
                     }
                 }
             }
-        }
-
-        if (notation === 'O-O-O') {
+        } else if (notation === 'O-O-O') {
             if (this.turn === 'white') {
                 const position = this.getPosition(4, 7);
 
@@ -564,14 +562,14 @@ export class BoardManager {
                         letters += h;
                     }
 
-                    console.log(letters, _notation);
+                    // console.log(letters, _notation);
 
                     if (_notation.startsWith(letters)) {
                         _filteredPieces.push(piece);
                     }
                 }
 
-                console.log(_filteredPieces);
+                // console.log(_filteredPieces);
 
                 if (_filteredPieces.length === 1) {
                     filteredPieces = _filteredPieces;
@@ -585,14 +583,14 @@ export class BoardManager {
                     const v = piece.getVerticalNotation();
                     let letters = piece.getNotationName() + v;
 
-                    console.log(letters, _notation);
+                    // console.log(letters, _notation);
 
                     if (_notation.startsWith(letters)) {
                         _filteredPieces.push(piece);
                     }
                 }
 
-                console.log(_filteredPieces);
+                // console.log(_filteredPieces);
 
 
                 if (_filteredPieces.length === 1) {
@@ -606,14 +604,14 @@ export class BoardManager {
                 for (const piece of filteredPieces) {
                     let letters = piece.getNotationPosition();
 
-                    console.log(letters, _notation);
+                    // console.log(letters, _notation);
 
                     if (_notation.startsWith(letters)) {
                         _filteredPieces.push(piece);
                     }
                 }
 
-                console.log(_filteredPieces);
+                // console.log(_filteredPieces);
 
                 if (_filteredPieces.length === 1) {
                     filteredPieces = _filteredPieces;
