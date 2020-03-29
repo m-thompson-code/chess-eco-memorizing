@@ -4,7 +4,7 @@ import { Piece } from '@app/types/piece';
 import { BoardManager } from '@app/types/board';
 
 export type GetBoardManagerFunc = () => BoardManager;
-export type GetBoardPositionFunc = () => BoardPosition | undefined;
+export type GetBoardPositionFunc = () => BoardPosition;
 
 export interface BoardPositionInit extends Coords {
     getBoard: GetBoardManagerFunc;
@@ -30,19 +30,12 @@ export class BoardPosition implements Coords {
 
     public set piece(piece: Piece | undefined) {
         if (this._piece) {
-            this._piece.getPosition = () => {
-                return undefined;
-            }
+            this._piece.active = false;
         }
-
-        // Let the old piece keep its x and y values so that if we bring that piece back, we can position it properly
 
         if (piece) {
             const oldPosition = piece.getPosition();
-
-            if (oldPosition) {
-                oldPosition.piece = undefined;
-            }
+            oldPosition.piece = undefined;
             
             piece.getPosition = () => {
                 return this;

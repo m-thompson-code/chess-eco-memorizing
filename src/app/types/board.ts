@@ -107,41 +107,29 @@ export class BoardManager {
         // Handle En Passante
         if (piece.checkEnPassante(-1)) {
             const leftPosition = this.getPosition(piece.x - 1, piece.y + (piece.color === 'white' ? -1 : 1));
-            if (leftPosition) {
-                leftPosition.showBigDot = true;
-            }
-        }
-        if (piece.checkEnPassante(1)) {
+            leftPosition.showBigDot = true;
+        } else if (piece.checkEnPassante(1)) {
             const rightPosition = this.getPosition(piece.x + 1, piece.y + (piece.color === 'white' ? -1 : 1));
-            if (rightPosition) {
-                rightPosition.showBigDot = true;
-            }
+            rightPosition.showBigDot = true;
         }
 
         this.showingDotsFor = piece;
     }
 
-    public getPosition(x: number, y: number): BoardPosition | undefined {
-        if (x < 0 || y < 0 || x > 7 || y > 7) {
-            return;
+    public getPosition(x: number, y: number): BoardPosition {
+        if (!(x === 0 || x === 1 || x === 2 || x === 3 || x === 4 || x === 5 || x === 6 || x === 7) || !(y === 0 || y === 1 || y === 2 || y === 3 || y === 4 || y === 5 || y === 6 || y === 7)) {
+            throw {
+                message: "Unexpected x or y",
+                x: x,
+                y: y,
+            };
         }
 
         return this.board[y][x];
     }
 
     public pushPiece(color: PieceColor, pieceType: PieceType, x: number, y: number): Piece {
-        const position: BoardPosition | undefined = this.getPosition(x, y);
-
-        if (!position) {
-            throw {
-                message: `Position doesn't exist`,
-                x: x,
-                y: y,
-                position: position,
-                color: color,
-                pieceType: pieceType,
-            };
-        }
+        const position: BoardPosition = this.getPosition(x, y);
 
         if (position.piece) {
             throw {
@@ -165,22 +153,6 @@ export class BoardManager {
 
         this.pieces.push(piece);
         return piece;
-    }
-
-    public setPiecePosition(piece: Piece, x: number, y: number): void {
-        const position = this.getPosition(x, y);
-
-        if (!position) {
-            throw {
-                message: "Unexpected missing position",
-                piece: piece,
-                x: x,
-                y: y,
-                position: position,
-            };
-        }
-
-        return piece.setPosition(position);
     }
 
     public flipBoardOrientation(disableAnimations?: boolean): void {
@@ -459,56 +431,26 @@ export class BoardManager {
         let boardHistory: BoardHistory | undefined = undefined;
 
         if (notation === 'O-O') {
-            if (this.turn === 'white') {
-                const position = this.getPosition(4, 7);
+            const yValue = this.turn === 'white' ? 7 : 0;
 
-                const piece = position?.piece;
+            const position: BoardPosition = this.getPosition(4, yValue);
 
-                if (piece && piece.pieceType === 'king') {
-                    const newPosition = this.getPosition(6, 7);
+            const piece = position.piece;
 
-                    if (newPosition) {
-                        boardHistory = piece.moveToPosition(newPosition, true);
-                    }
-                }
-            } else {
-                const position = this.getPosition(4, 0);
-
-                const piece = position?.piece;
-
-                if (piece && piece.pieceType === 'king') {
-                    const newPosition = this.getPosition(6, 0);
-
-                    if (newPosition) {
-                        boardHistory = piece.moveToPosition(newPosition, true);
-                    }
-                }
+            if (piece && piece.pieceType === 'king') {
+                const newPosition: BoardPosition = this.getPosition(6, yValue);
+                boardHistory = piece.moveToPosition(newPosition, true);
             }
         } else if (notation === 'O-O-O') {
-            if (this.turn === 'white') {
-                const position = this.getPosition(4, 7);
+            const yValue = this.turn === 'white' ? 7 : 0;
 
-                const piece = position?.piece;
+            const position = this.getPosition(4, yValue);
 
-                if (piece && piece.pieceType === 'king') {
-                    const newPosition = this.getPosition(1, 7);
+            const piece = position?.piece;
 
-                    if (newPosition) {
-                        boardHistory = piece.moveToPosition(newPosition, true);
-                    }
-                }
-            } else {
-                const position = this.getPosition(4, 0);
-
-                const piece = position?.piece;
-
-                if (piece && piece.pieceType === 'king') {
-                    const newPosition = this.getPosition(1, 0);
-
-                    if (newPosition) {
-                        boardHistory = piece.moveToPosition(newPosition, true);
-                    }
-                }
+            if (piece && piece.pieceType === 'king') {
+                const newPosition: BoardPosition = this.getPosition(1, yValue);
+                boardHistory = piece.moveToPosition(newPosition, true);
             }
         } else {
             const firstLetter = notation.substring(0, 1);
@@ -526,7 +468,7 @@ export class BoardManager {
             
             movementNotation = _notation.substring(_notation.length - 2, _notation.length);
 
-            const moveToPosition = this.getPositionByNotation(movementNotation);
+            const moveToPosition: BoardPosition | undefined = this.getPositionByNotation(movementNotation);
 
             if (!moveToPosition) {
                 throw {
@@ -649,9 +591,7 @@ export class BoardManager {
         return;
     }
 
-    getPositionByNotation(letters: string): BoardPosition | undefined {
-        ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-
+    public getPositionByNotation(letters: string): BoardPosition {
         const hMap: {[h: string]: number} = {
             a: 0, b: 1, c: 2, d: 3, e: 4, f: 5, g: 6, h: 7,
         };
@@ -669,6 +609,8 @@ export class BoardManager {
             throw {
                 message: "Invalid letters",
                 letters: letters,
+                x: x,
+                y: y,
             };
         }
 

@@ -84,12 +84,8 @@ export class Piece implements Coords {
         this.top = boardPositionStyles.top;
     }
     
-    private getPositionIfAvailable(relativeX: number, relativeY: number): BoardPosition | undefined {
+    private _getPositionIfAvailable(relativeX: number, relativeY: number): BoardPosition | undefined {
         const position = this.getBoardManager().getPosition(this.x + relativeX, this.y + relativeY);
-
-        if (!position) {
-            return;
-        }
 
         if (!position.piece) {
             if (this.pieceType === 'pawn') {
@@ -163,7 +159,7 @@ export class Piece implements Coords {
         const _position = this.getBoardManager().getPosition(this.x + relativeX, this.y);
 
         const enemyColor = this.color === 'white' ? 'black' : 'white';
-        if (_position && _position.piece && _position.piece.moveCount === 1 && _position.piece.pieceType === 'pawn' && _position.piece.color === enemyColor) {
+        if (_position.piece && _position.piece.moveCount === 1 && _position.piece.pieceType === 'pawn' && _position.piece.color === enemyColor) {
             return true;
         }
 
@@ -176,12 +172,12 @@ export class Piece implements Coords {
         // -1 for white, 1 for black
         const isWhiteMultiplier = this.color === 'white' ? -1 : 1;
 
-        const position1 = this.getPositionIfAvailable(0, isWhiteMultiplier);
+        const position1 = this._getPositionIfAvailable(0, isWhiteMultiplier);
 
         if (position1) {
             positions.push(position1);
             if (this.moveCount === 0) {
-                const position2 = this.getPositionIfAvailable(0, 2 * isWhiteMultiplier);
+                const position2 = this._getPositionIfAvailable(0, 2 * isWhiteMultiplier);
 
                 if (position2) {
                     positions.push(position2);
@@ -189,29 +185,25 @@ export class Piece implements Coords {
             }
         }
 
-        const position3 = this.getPositionIfAvailable(-1, isWhiteMultiplier);
+        const position3 = this._getPositionIfAvailable(-1, isWhiteMultiplier);
 
         if (position3) {
             positions.push(position3);
         } else {
             if (this.checkEnPassante(-1)) {
                 const __position3 = this.getBoardManager().getPosition(this.x - 1, this.y + isWhiteMultiplier);
-                if (__position3) {
-                    positions.push(__position3); 
-                }
+                positions.push(__position3);
             }
         }
 
-        const position4 = this.getPositionIfAvailable(1, isWhiteMultiplier);
+        const position4 = this._getPositionIfAvailable(1, isWhiteMultiplier);
 
         if (position4) {
             positions.push(position4);
         } else {
             if (this.checkEnPassante(1)) {
                 const __position4 = this.getBoardManager().getPosition(this.x + 1, this.y + isWhiteMultiplier);
-                if (__position4) {
-                    positions.push(__position4); 
-                }
+                positions.push(__position4);
             }
         }
 
@@ -221,47 +213,47 @@ export class Piece implements Coords {
     public getKnightMoveToSpaces(): BoardPosition[] {
         const positions: BoardPosition[] = [];
 
-        const position1 = this.getPositionIfAvailable(1, 2);
+        const position1 = this._getPositionIfAvailable(1, 2);
 
         if (position1) {
             positions.push(position1);
         }
-        const position2 = this.getPositionIfAvailable(-1, 2);
+        const position2 = this._getPositionIfAvailable(-1, 2);
 
         if (position2) {
             positions.push(position2);
         }
 
-        const position3 = this.getPositionIfAvailable(2, 1);
+        const position3 = this._getPositionIfAvailable(2, 1);
 
         if (position3) {
             positions.push(position3);
         }
 
-        const position4 = this.getPositionIfAvailable(-2, 1);
+        const position4 = this._getPositionIfAvailable(-2, 1);
 
         if (position4) {
             positions.push(position4);
         }
 
-        const position5 = this.getPositionIfAvailable(1, -2);
+        const position5 = this._getPositionIfAvailable(1, -2);
 
         if (position5) {
             positions.push(position5);
         }
-        const position6 = this.getPositionIfAvailable(-1, -2);
+        const position6 = this._getPositionIfAvailable(-1, -2);
 
         if (position6) {
             positions.push(position6);
         }
 
-        const position7 = this.getPositionIfAvailable(2, -1);
+        const position7 = this._getPositionIfAvailable(2, -1);
 
         if (position7) {
             positions.push(position7);
         }
 
-        const position8 = this.getPositionIfAvailable(-2, -1);
+        const position8 = this._getPositionIfAvailable(-2, -1);
 
         if (position8) {
             positions.push(position8);
@@ -274,7 +266,7 @@ export class Piece implements Coords {
         const positions: BoardPosition[] = [];
 
         for (let i = 1; i < 8; i++) {
-            const position = this.getPositionIfAvailable(i, i);
+            const position = this._getPositionIfAvailable(i, i);
 
             if (!position) {
                 break;
@@ -288,7 +280,7 @@ export class Piece implements Coords {
         }
 
         for (let j = 1; j < 8; j++) {
-            const position = this.getPositionIfAvailable(-j, j);
+            const position = this._getPositionIfAvailable(-j, j);
 
             if (!position) {
                 break;
@@ -302,7 +294,7 @@ export class Piece implements Coords {
         }
 
         for (let k = 1; k < 8; k++) {
-            const position = this.getPositionIfAvailable(-k, -k);
+            const position = this._getPositionIfAvailable(-k, -k);
 
             if (!position) {
                 break;
@@ -316,7 +308,7 @@ export class Piece implements Coords {
         }
 
         for (let m = 1; m < 8; m++) {
-            const position = this.getPositionIfAvailable(m, -m);
+            const position = this._getPositionIfAvailable(m, -m);
 
             if (!position) {
                 break;
@@ -336,7 +328,7 @@ export class Piece implements Coords {
         const positions: BoardPosition[] = [];
 
         for (let i = 1; i < 8; i++) {
-            const position = this.getPositionIfAvailable(i, 0);
+            const position = this._getPositionIfAvailable(i, 0);
 
             if (!position) {
                 break;
@@ -350,7 +342,7 @@ export class Piece implements Coords {
         }
 
         for (let j = 1; j < 8; j++) {
-            const position = this.getPositionIfAvailable(-j, 0);
+            const position = this._getPositionIfAvailable(-j, 0);
 
             if (!position) {
                 break;
@@ -364,7 +356,7 @@ export class Piece implements Coords {
         }
 
         for (let k = 1; k < 8; k++) {
-            const position = this.getPositionIfAvailable(0, k);
+            const position = this._getPositionIfAvailable(0, k);
 
             if (!position) {
                 break;
@@ -378,7 +370,7 @@ export class Piece implements Coords {
         }
 
         for (let m = 1; m < 8; m++) {
-            const position = this.getPositionIfAvailable(0, -m);
+            const position = this._getPositionIfAvailable(0, -m);
 
             if (!position) {
                 break;
@@ -397,47 +389,47 @@ export class Piece implements Coords {
     public getKingMoveToSpaces(checkCasting: boolean): BoardPosition[] {
         const positions: BoardPosition[] = [];
 
-        const position1 = this.getPositionIfAvailable(1, 0);
+        const position1 = this._getPositionIfAvailable(1, 0);
 
         if (position1) {
             positions.push(position1);
         }
-        const position2 = this.getPositionIfAvailable(1, 1);
+        const position2 = this._getPositionIfAvailable(1, 1);
 
         if (position2) {
             positions.push(position2);
         }
 
-        const position3 = this.getPositionIfAvailable(1, -1);
+        const position3 = this._getPositionIfAvailable(1, -1);
 
         if (position3) {
             positions.push(position3);
         }
 
-        const position4 = this.getPositionIfAvailable(0, 1);
+        const position4 = this._getPositionIfAvailable(0, 1);
 
         if (position4) {
             positions.push(position4);
         }
 
-        const position5 = this.getPositionIfAvailable(0, -1);
+        const position5 = this._getPositionIfAvailable(0, -1);
 
         if (position5) {
             positions.push(position5);
         }
-        const position6 = this.getPositionIfAvailable(-1, 0);
+        const position6 = this._getPositionIfAvailable(-1, 0);
 
         if (position6) {
             positions.push(position6);
         }
 
-        const position7 = this.getPositionIfAvailable(-1, 1);
+        const position7 = this._getPositionIfAvailable(-1, 1);
 
         if (position7) {
             positions.push(position7);
         }
 
-        const position8 = this.getPositionIfAvailable(-1, -1);
+        const position8 = this._getPositionIfAvailable(-1, -1);
 
         if (position8) {
             positions.push(position8);
@@ -449,26 +441,16 @@ export class Piece implements Coords {
             if (this.canPerformKingSideCastle()) {
                 const kingSideCastlePosition = this.getBoardManager().getPosition(this.x + 2, this.y);
                 const kingSideCastlePositionRook = this.getBoardManager().getPosition(this.x + 3, this.y);
-
-                if (kingSideCastlePosition) {
-                    positions.push(kingSideCastlePosition);
-                }
-                if (kingSideCastlePositionRook) {
-                    positions.push(kingSideCastlePositionRook);
-                }
+                positions.push(kingSideCastlePosition);
+                positions.push(kingSideCastlePositionRook);
             }
             // console.log("END canPerformKingSideCastle()");
 
             if (this.canPerformQueenSideCastle()) {
                 const kingSideCastlePosition2 = this.getBoardManager().getPosition(this.x - 2, this.y);
                 const kingSideCastlePositionRook2 = this.getBoardManager().getPosition(this.x - 4, this.y);
-
-                if (kingSideCastlePosition2) {
-                    positions.push(kingSideCastlePosition2);
-                }
-                if (kingSideCastlePositionRook2) {
-                    positions.push(kingSideCastlePositionRook2);
-                }
+                positions.push(kingSideCastlePosition2);
+                positions.push(kingSideCastlePositionRook2);
             }
             // console.log("END canPerformQueenSideCastle()");
         }
@@ -495,10 +477,6 @@ export class Piece implements Coords {
         const position1 = this.getBoardManager().getPosition(this.x + 1, this.y);
         const position2 = this.getBoardManager().getPosition(this.x + 2, this.y);
         const rockPosition = this.getBoardManager().getPosition(this.x + 3, this.y);
-
-        if (!position1 || !position2 || !rockPosition) {
-            return false;
-        }
 
         if (position1.piece || position2.piece) {
             return false;
@@ -546,10 +524,6 @@ export class Piece implements Coords {
         const position2 = this.getBoardManager().getPosition(this.x - 2, this.y);
         const position3 = this.getBoardManager().getPosition(this.x - 3, this.y);
         const rockPosition = this.getBoardManager().getPosition(this.x - 4, this.y);
-
-        if (!position1 || !position2 || !position3 || !rockPosition) {
-            return false;
-        }
 
         if (position1.piece || position2.piece || position3.piece) {
             return false;
@@ -645,19 +619,11 @@ export class Piece implements Coords {
         // Temporarily move piece to newPosition
         const oldPosition = this.getPosition();
 
-        if (!oldPosition) {
-            throw {
-                message: "Unexpected missing oldPosition",
-                oldPosition: oldPosition,
-                this: this,
-                newPosition: newPosition,
-            };
-        }
-
         const otherPiece = newPosition.piece;
         this.setPosition(newPosition);
 
         // Capture
+        // This is already handled by the get piece method on BoardPosition, but it doesn't hurt to deactive piece here too
         if (otherPiece) {
             otherPiece.active = false;
         }
@@ -693,39 +659,24 @@ export class Piece implements Coords {
     private _moveToQueenSideCastlePosition(newPosition: BoardPosition, updateUI: boolean): BoardHistory | undefined {
         const oldPosition = this.getPosition();
 
-        if (!oldPosition) {
-            throw {
-                message: "piece doesn't have oldPosition",
-                this: this,
-            };
-        }
-
         if (this.pieceType === 'king') {
             // Queen side castle
             if (this.moveCount === 0) {
                 if (newPosition.x === 7 || newPosition.x === 6) {
-                    const castleToPosition = this.getBoardManager().getPosition(6, this.y);
-                    const queenRookPosition = this.getBoardManager().getPosition(7, this.y);
+                    const castleToPosition: BoardPosition = this.getBoardManager().getPosition(6, this.y);
+                    const queenRookPosition: BoardPosition = this.getBoardManager().getPosition(7, this.y);
 
-                    if (!castleToPosition) {
-                        throw {
-                            message: "Unexpected missing castleToPosition",
-                            piece: this,
-                            newPosition: newPosition,
-                            castleToPosition: castleToPosition,
-                        };
-                    }
+                    const queenRook = queenRookPosition.piece;
                     
-                    if (!queenRookPosition || !queenRookPosition.piece) {
+                    if (!queenRook) {
                         throw {
-                            message: "Unexpected missing queenRookPosition",
+                            message: "Unexpected missing queenRook",
                             piece: this,
                             newPosition: newPosition,
                             queenRookPosition: queenRookPosition,
+                            queenRook: queenRook,
                         };
                     }
-
-                    const queenRook = queenRookPosition.piece;
                     
                     const boardHistory: BoardHistory = {
                         moveNotation: 'O-O',
@@ -741,15 +692,7 @@ export class Piece implements Coords {
 
                     this.setPosition(castleToPosition);
 
-                    const newKingRookPosition = this.getBoardManager().getPosition(5, this.y);
-                    
-                    if (!newKingRookPosition) {
-                        throw {
-                            message: "Unexpected missing newKingRookPosition",
-                            newKingRookPosition: newKingRookPosition,
-                            boardHistory: boardHistory,
-                        };
-                    }
+                    const newKingRookPosition: BoardPosition = this.getBoardManager().getPosition(5, this.y);
 
                     queenRook.setPosition(newKingRookPosition);
 
@@ -761,28 +704,20 @@ export class Piece implements Coords {
                 }
 
                 if (newPosition.x === 0 || newPosition.x === 2) {
-                    const castleToPosition = this.getBoardManager().getPosition(2, this.y);
-                    const queenRookPosition = this.getBoardManager().getPosition(0, this.y);
+                    const castleToPosition: BoardPosition = this.getBoardManager().getPosition(2, this.y);
+                    const queenRookPosition: BoardPosition = this.getBoardManager().getPosition(0, this.y);
 
-                    if (!castleToPosition) {
+                    const queenRook = queenRookPosition.piece;
+
+                    if (!queenRook) {
                         throw {
-                            message: "Unexpected missing castleToPosition",
-                            piece: this,
-                            newPosition: newPosition,
-                            castleToPosition: castleToPosition,
-                        };
-                    }
-                    
-                    if (!queenRookPosition || !queenRookPosition.piece) {
-                        throw {
-                            message: "Unexpected missing queenRookPosition",
+                            message: "Unexpected missing queenRook",
                             piece: this,
                             newPosition: newPosition,
                             queenRookPosition: queenRookPosition,
+                            queenRook: queenRook,
                         };
                     }
-
-                    const queenRook = queenRookPosition.piece;
                     
                     const boardHistory: BoardHistory = {
                         moveNotation: 'O-O-O',
@@ -798,15 +733,7 @@ export class Piece implements Coords {
 
                     this.setPosition(castleToPosition);
 
-                    const newQueenRookPosition = this.getBoardManager().getPosition(3, this.y);
-                    
-                    if (!newQueenRookPosition) {
-                        throw {
-                            message: "Unexpected missing newQueenRookPosition",
-                            newQueenRookPosition: newQueenRookPosition,
-                            boardHistory: boardHistory,
-                        };
-                    }
+                    const newQueenRookPosition: BoardPosition = this.getBoardManager().getPosition(3, this.y);
 
                     queenRook.setPosition(newQueenRookPosition);
 
@@ -831,14 +758,7 @@ export class Piece implements Coords {
             return;
         }
 
-        const oldPosition = this.getPosition();
-
-        if (!oldPosition) {
-            throw {
-                message: "piece doesn't have oldPosition",
-                this: this,
-            };
-        }
+        const oldPosition: BoardPosition = this.getPosition();
 
         let boardHistory: BoardHistory | undefined = undefined;
 
@@ -949,13 +869,7 @@ export class Piece implements Coords {
                     this.setPosition(oldPosition);
 
                     if (newPosition.x === oldPosition.x - 1 && this.checkEnPassante(-1)) {
-                        const _enPassantePosition = this.getBoardManager().getPosition(oldPosition.x - 1, oldPosition.y);
-                        
-                        if (!_enPassantePosition) {
-                            throw {
-                                message: "Unexpected missing _enPassantePosition",
-                            };
-                        }
+                        const _enPassantePosition: BoardPosition = this.getBoardManager().getPosition(oldPosition.x - 1, oldPosition.y);
     
                         const _enPassantePawn = _enPassantePosition.piece;
     
@@ -978,13 +892,7 @@ export class Piece implements Coords {
                             oldPawnPosition: _enPassantePosition,
                         };
                     } else if (newPosition.x === oldPosition.x + 1 && this.checkEnPassante(1)) {
-                        const _enPassantePosition = this.getBoardManager().getPosition(oldPosition.x + 1, oldPosition.y);
-                        
-                        if (!_enPassantePosition) {
-                            throw {
-                                message: "Unexpected missing _enPassantePosition",
-                            };
-                        }
+                        const _enPassantePosition: BoardPosition = this.getBoardManager().getPosition(oldPosition.x + 1, oldPosition.y);
     
                         const _enPassantePawn = _enPassantePosition.piece;
     

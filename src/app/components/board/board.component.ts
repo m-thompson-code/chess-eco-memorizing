@@ -88,11 +88,9 @@ export class BoardComponent implements OnInit {
                     piece.touchDragging = false;
 
                     piece.resetBoardPositionStyles();
-                    const oldPosition = piece.getPosition();
 
-                    if (oldPosition) {
-                        this.activatePosition(oldPosition);
-                    }
+                    const oldPosition = piece.getPosition();
+                    this.activatePosition(oldPosition);
                 });
             }
         }
@@ -239,17 +237,7 @@ export class BoardComponent implements OnInit {
         this.hoverX = _x;
         this.hoverY = _y;
 
-        const hoverPosition = this.boardManager.getPosition(_x, _y);
-
-        if (!hoverPosition) {
-            throw {
-                message: "Unexpected hoverPosition",
-                _x: _x,
-                _y: _y,
-            }
-        }
-
-        this.hoverPosition = hoverPosition;
+        this.hoverPosition = this.boardManager.getPosition(_x, _y);
     }
 
     public activatePosition(position: BoardPosition): void {
