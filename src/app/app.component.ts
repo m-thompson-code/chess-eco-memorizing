@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { BoardManager } from './types/board';
 
-import ecoOpenings from '@app/eco_openings_metadata.json';
+// import ecoOpenings from '@app/eco_openings_metadata.json';
 
 @Component({
     selector: 'app-root',
@@ -23,7 +23,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit() {
-        console.log(ecoOpenings);
+        // console.log(ecoOpenings);
         this.boardManager = new BoardManager();
 
         this.boardManagers = [];

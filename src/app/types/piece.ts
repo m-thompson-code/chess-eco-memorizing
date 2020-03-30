@@ -30,7 +30,7 @@ export class Piece implements Coords {
     public disableAnimations: boolean;
 
     public readonly getBoardManager: GetBoardManagerFunc;
-    public getPosition: GetBoardPositionFunc;
+    public _getPosition: GetBoardPositionFunc;
 
     public moveCount: number;
 
@@ -39,11 +39,15 @@ export class Piece implements Coords {
             return pieceInit.boardManager;
         };
 
+        this.active = true;
+        
+        this.moveCount = 0;
+
         // Note that these values are only temporary since Position's set method for piece will update piece
         this.x = pieceInit.position.x;
         this.y = pieceInit.position.y;
         
-        this.getPosition = () => {
+        this._getPosition = () => {
             return pieceInit.position;
         };
 
@@ -52,11 +56,6 @@ export class Piece implements Coords {
 
         this.color = pieceInit.color;
         this.pieceType = pieceInit.pieceType;
-
-        this.active = true;
-
-        this.moveCount = 0;
-
         this.left = "0";
         this.top = "0";
 
@@ -83,9 +82,30 @@ export class Piece implements Coords {
         this.left = boardPositionStyles.left;
         this.top = boardPositionStyles.top;
     }
+
+    public getPosition(): BoardPosition {
+        if (!this.active) {
+            const message = "Unexpected getPosition while not active";
+            console.trace(message);
+            throw {
+                message: message,
+                piece: this,
+            };
+        }
+
+        return this._getPosition();
+    }
     
     private _getPositionIfAvailable(relativeX: number, relativeY: number): BoardPosition | undefined {
-        const position = this.getBoardManager().getPosition(this.x + relativeX, this.y + relativeY);
+        const x = this.x + relativeX;
+        const y = this.y + relativeY;
+
+        // Exit early since this position wouldn't be on the board
+        if (x < 0 || x > 7 || y < 0 || y > 7) {
+            return;
+        }
+
+        const position = this.getBoardManager().getPosition(x, y);
 
         if (!position.piece) {
             if (this.pieceType === 'pawn') {
@@ -149,14 +169,19 @@ export class Piece implements Coords {
         return positions;
     }
 
-    // TODO: Handle checking for EnPassante
     public checkEnPassante(relativeX: number): boolean {
         if (this.pieceType !== 'pawn') {
             return false;
         }
 
         // En Passante
-        const _position = this.getBoardManager().getPosition(this.x + relativeX, this.y);
+        const x = this.x + relativeX;
+
+        if (x < 0 ||x > 7) {
+            return false;
+        }
+
+        const _position = this.getBoardManager().getPosition(x, this.y);
 
         const enemyColor = this.color === 'white' ? 'black' : 'white';
         if (_position.piece && _position.piece.moveCount === 1 && _position.piece.pieceType === 'pawn' && _position.piece.color === enemyColor) {
@@ -619,32 +644,31 @@ export class Piece implements Coords {
         // Temporarily move piece to newPosition
         const oldPosition = this.getPosition();
 
-        const otherPiece = newPosition.piece;
+        const capturedPiece = newPosition.piece;
         this.setPosition(newPosition);
 
         // Capture
-        // This is already handled by the get piece method on BoardPosition, but it doesn't hurt to deactive piece here too
-        if (otherPiece) {
-            otherPiece.active = false;
+        if (capturedPiece) {
+            capturedPiece.active = false;
         }
         
         const boardHistory: BoardHistory = {
             moveNotation: 'TEMP',
             movingPiece: this,
-            capturedPiece: otherPiece,
+            capturedPiece: capturedPiece,
             oldPosition: oldPosition,
             newPosition: newPosition,
         };
 
-        this.moveCount += 1;
-
         if (this.pieceType === 'pawn') {
             if (this.color === 'white' && oldPosition.y - newPosition.y === 2) {
-                boardHistory.pawnMovedTwoSpaces = true;
+                // boardHistory.pawnMovedTwoSpaces = true;
             } else if (this.color === 'black' && newPosition.y - oldPosition.y === 2) {
-                boardHistory.pawnMovedTwoSpaces = true;
+                // boardHistory.pawnMovedTwoSpaces = true;
             }
         }
+
+        this.moveCount += 1;
 
         this.getBoardManager().pushMoveHistroy(boardHistory, false);
 
@@ -775,15 +799,15 @@ export class Piece implements Coords {
             // 1. Check horizontal notation
             // 2. Check vertical notation
             // 3. Check both
-            const pieces = this.getBoardManager().pieces;
+            const pieces = this.getBoardManager().getActivePieces({
+                pieceColor: this.color,
+                pieceType: this.pieceType,
+            });
+
             let filteredPieces: Piece[] = [];
 
             for (const piece of pieces) {
                 if (piece === this) {
-                    continue;
-                }
-
-                if (!piece.active || piece.color !== this.color || piece.pieceType !== this.pieceType) {
                     continue;
                 }
                 
@@ -795,7 +819,6 @@ export class Piece implements Coords {
                 
                 filteredPieces.push(piece);
             }
-            // console.log(filteredPieces);
 
             // 1. Check horizontal notation
             if (filteredPieces.length) {
@@ -948,14 +971,12 @@ export class Piece implements Coords {
             const putsEnemyInCheck = this.getBoardManager().kingIsThreatened(this.color === 'white' ? 'black' : 'white');
 
             if (putsEnemyInCheck) {
-                const pieces = this.getBoardManager().pieces;
+                const pieces = this.getBoardManager().getActivePieces({
+                    pieceColor: this.color,
+                });
 
                 let foundAvailableEnemyMove = false;
                 for (const piece of pieces) {
-                    if (!piece.active || piece.color === this.color) {
-                        continue;
-                    }
-
                     const availableMoves = piece.getAvailableMoves(true, false);
 
                     if (!availableMoves.length) {
@@ -981,9 +1002,9 @@ export class Piece implements Coords {
 
             if (this.pieceType === 'pawn') {
                 if (this.color === 'white' && oldPosition.y - newPosition.y === 2) {
-                    boardHistory.pawnMovedTwoSpaces = true;
+                    // boardHistory.pawnMovedTwoSpaces = true;
                 } else if (this.color === 'black' && newPosition.y - oldPosition.y === 2) {
-                    boardHistory.pawnMovedTwoSpaces = true;
+                    // boardHistory.pawnMovedTwoSpaces = true;
                 }
             }
 

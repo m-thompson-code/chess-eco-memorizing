@@ -4,7 +4,7 @@ import { BoardPosition } from '@app/types/boardPosition';
 export type BoardOrientation = 'normal' | 'flipped';
 
 export interface BoardHistory {
-    pawnMovedTwoSpaces?: boolean;
+    // pawnMovedTwoSpaces?: boolean;
     moveNotation: string;
     movingPiece: Piece;
     capturedPiece?: Piece;
@@ -37,6 +37,8 @@ export type Board = {
 export class BoardManager {
     public board: Board;
     public pieces: Piece[];
+    public whitePieces: Piece[];
+    public blackPieces: Piece[];
 
     public activePosition?: BoardPosition;
 
@@ -62,7 +64,10 @@ export class BoardManager {
         this.boardOrientation = boardOrientation || 'normal';
 
         this.board = this._getInitalizedBoard();
+
         this.pieces = [];
+        this.whitePieces = [];
+        this.blackPieces = [];
 
         this.history = [];
         this.turnCount = 0;
@@ -90,7 +95,6 @@ export class BoardManager {
         this.showingDotsFor = undefined;
     }
 
-    // TODO: Handle showing bit dot for En passant
     public showMovementDots(piece: Piece): void {
         if (this.showingDotsFor === piece) {
             return;
@@ -118,14 +122,46 @@ export class BoardManager {
 
     public getPosition(x: number, y: number): BoardPosition {
         if (!(x === 0 || x === 1 || x === 2 || x === 3 || x === 4 || x === 5 || x === 6 || x === 7) || !(y === 0 || y === 1 || y === 2 || y === 3 || y === 4 || y === 5 || y === 6 || y === 7)) {
+            const message = "Unexpected x or y";
+            console.trace(message);
             throw {
-                message: "Unexpected x or y",
+                message: message,
                 x: x,
                 y: y,
             };
         }
 
         return this.board[y][x];
+    }
+
+    public getActivePieces(filter?: {pieceColor?: PieceColor, pieceType?: PieceType}): Piece[] {
+        const pieces: Piece[] = [];
+        let _pieces: Piece[] = [];
+
+        const pieceColor = filter?.pieceColor;
+        const pieceType = filter?.pieceType;
+
+        if (pieceColor === 'white') {
+            _pieces = this.whitePieces;
+        } else if (pieceColor === 'black') {
+            _pieces = this.blackPieces;
+        } else {
+            _pieces = this.pieces;
+        }
+
+        for (const piece of _pieces) {
+            if (!piece.active) {
+                continue;
+            }
+
+            if (pieceType && piece.pieceType !== pieceType) {
+                continue;
+            }
+
+            pieces.push(piece);
+        }
+
+        return pieces;
     }
 
     public pushPiece(color: PieceColor, pieceType: PieceType, x: number, y: number): Piece {
@@ -152,6 +188,13 @@ export class BoardManager {
         const piece: Piece = new Piece(pieceInit);
 
         this.pieces.push(piece);
+
+        if (piece.color === 'white') {
+            this.whitePieces.push(piece);
+        } else {
+            this.blackPieces.push(piece);
+        }
+
         return piece;
     }
 
@@ -264,15 +307,11 @@ export class BoardManager {
     }
 
     public kingIsThreatened(kingColor: PieceColor): boolean {
-        for (let piece of this.pieces) {
-            if (piece.color === kingColor) {
-                continue;
-            }
-
-            if (!piece.active) {
-                continue;
-            }
-
+        const pieces = this.getActivePieces({
+            pieceColor: kingColor === 'white' ? 'black' : 'white',
+        });
+        // console.log(pieces);
+        for (const piece of pieces) {
             const availableMoves: BoardPosition[] = piece.getAvailableMoves(false, false);
 
             for (const move of availableMoves) {
@@ -286,15 +325,11 @@ export class BoardManager {
     }
     
     public positionIsThreatened(enemyColor: PieceColor, position: BoardPosition): boolean {
-        for (let piece of this.pieces) {
-            if (piece.color !== enemyColor) {
-                continue;
-            }
-            
-            if (!piece.active) {
-                continue;
-            }
+        const pieces = this.getActivePieces({
+            pieceColor: enemyColor,
+        });
 
+        for (let piece of pieces) {
             const availableMoves: BoardPosition[] = piece.getAvailableMoves(false, false);
 
             for (const move of availableMoves) {
@@ -321,22 +356,23 @@ export class BoardManager {
             this.history[this.history.length - 1].black = undefined;
 
             this.turn = 'black';
-            this.blackKingIsInCheck = this.kingIsThreatened('black');
         } else {
             boardHistory = this.history.pop()?.white;
 
             this.turn = 'white';
-            this.whiteKingIsInCheck = this.kingIsThreatened('white');
         }
 
         // console.log(boardHistory);
 
         if (boardHistory) {
+            const _movingPiece = boardHistory.movingPiece;
+            _movingPiece.setPosition(boardHistory.oldPosition);
+            
             const _capturedPiece = boardHistory.capturedPiece;
 
             if (_capturedPiece) {
-                _capturedPiece.setPosition(boardHistory.newPosition);
                 _capturedPiece.active = true;
+                _capturedPiece.setPosition(boardHistory.newPosition);
             }
 
             // Handling undoing a castling
@@ -351,18 +387,21 @@ export class BoardManager {
             const _pawnPiece = boardHistory.enPassante?.pawn;
             const _oldPawnPosition = boardHistory.enPassante?.oldPawnPosition;
             if (_pawnPiece && _oldPawnPosition) {
-                _pawnPiece.setPosition(_oldPawnPosition);
                 _pawnPiece.active = true;
+                _pawnPiece.setPosition(_oldPawnPosition);
             }
-
-            const _movingPiece = boardHistory.movingPiece;
-            _movingPiece.setPosition(boardHistory.oldPosition);
 
             if (boardHistory.promote) {
                 _movingPiece.pieceType = 'pawn';
             }
 
             _movingPiece.moveCount -= 1;
+        }
+
+        if (whiteMove) {
+            this.blackKingIsInCheck = this.kingIsThreatened('black');
+        } else {
+            this.whiteKingIsInCheck = this.kingIsThreatened('white');
         }
 
         this.turnCount -= 1;
@@ -479,11 +518,12 @@ export class BoardManager {
                 }
             }
 
-            for (const piece of this.pieces) {
-                if (!piece.active || piece.color !== this.turn || piece.pieceType !== pieceType) {
-                    continue;
-                }
+            const pieces = this.getActivePieces({
+                pieceColor: this.turn,
+                pieceType: pieceType,
+            });
 
+            for (const piece of pieces) {
                 const availableMoves = piece.getAvailableMoves(true, true);
 
                 if (!availableMoves.includes(moveToPosition)) {

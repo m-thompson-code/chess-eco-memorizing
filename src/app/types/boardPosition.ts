@@ -29,15 +29,19 @@ export class BoardPosition implements Coords {
     private _piece: Piece | undefined;
 
     public set piece(piece: Piece | undefined) {
-        if (this._piece) {
-            this._piece.active = false;
-        }
-
         if (piece) {
             const oldPosition = piece.getPosition();
-            oldPosition.piece = undefined;
+
+            if (oldPosition !== this) {
+                if (piece.pieceType === 'king') {
+                    console.trace("king debug");
+                    debugger;
+                }
+                
+                oldPosition.piece = undefined;
+            }
             
-            piece.getPosition = () => {
+            piece._getPosition = () => {
                 return this;
             }
     
