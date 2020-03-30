@@ -1,6 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CdkDragMove, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
-import { PieceColor } from '@app/types/piece';
 import { BoardPosition } from '@app/types/boardPosition';
 
 export interface DragStarted<T=any> {
@@ -28,8 +27,7 @@ export type HoverElement = HTMLElement;
 export class DraggablePositionComponent implements OnInit {
     private _position: BoardPosition | undefined;
 
-    @Input()
-    public set position(position: BoardPosition | undefined) {
+    @Input() public set position(position: BoardPosition | undefined) {
         if (this._position && this._position.draggablePositionComponent === this) {
             this._position.draggablePositionComponent = undefined;
         }
@@ -51,8 +49,6 @@ export class DraggablePositionComponent implements OnInit {
     @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
     @Output() public dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter;
 
-    @Input() turn?: PieceColor;
-
     constructor() {
 
     }
@@ -60,32 +56,32 @@ export class DraggablePositionComponent implements OnInit {
     public ngOnInit() {
     }
 
-    public handleDragStarted(event: CdkDragStart<HoverElement>): void {
+    public handleDragStarted(cdkDragStart: CdkDragStart<HoverElement>): void {
         const dragStartedEvent: DragStarted<HTMLElement> = {
             position: this.position,
-            cdkDragStart: event,
+            cdkDragStart: cdkDragStart,
         };
 
         return this.dragStarted.emit(dragStartedEvent);
     }
 
-    public handleDragMoved(event: CdkDragMove<HoverElement>): void {
+    public handleDragMoved(cdkDragMove: CdkDragMove<HoverElement>): void {
         const dragMovedEvent: DragMoved<HTMLElement> = {
             position: this.position,
-            cdkDragMove: event,
+            cdkDragMove: cdkDragMove,
         };
 
         return this.dragMoved.emit(dragMovedEvent);
     }
 
-    public handleDragEnded(event: CdkDragEnd<HoverElement>): void {
+    public handleDragEnded(cdkDragEnd: CdkDragEnd<HoverElement>): void {
         const dragEndedEvent: DragEnded<HTMLElement> = {
             position: this.position,
-            cdkDragEnd: event,
+            cdkDragEnd: cdkDragEnd,
         };
         
         this.dragEnded.emit(dragEndedEvent);
 
-        event.source.reset();
+        cdkDragEnd.source.reset();
     }
 }

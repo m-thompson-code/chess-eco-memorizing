@@ -43,11 +43,11 @@ export class PositionComponent implements OnInit {
         return this._position;
     };
 
-    @Input() activePosition?: BoardPosition;
-    @Input() hoverStartFromPosition?: BoardPosition;
-    @Input() hoverPosition?: BoardPosition;
-    @Input() movedToPosition?: BoardPosition;
-    @Input() movedFromPosition?: BoardPosition;
+    @Input() public activePosition?: BoardPosition;
+    @Input() public hoverStartFromPosition?: BoardPosition;
+    @Input() public hoverPosition?: BoardPosition;
+    @Input() public movedToPosition?: BoardPosition;
+    @Input() public movedFromPosition?: BoardPosition;
     
     constructor() {
 

@@ -7,7 +7,7 @@ export type GetBoardManagerFunc = () => BoardManager;
 export type GetBoardPositionFunc = () => BoardPosition;
 
 export interface BoardPositionInit extends Coords {
-    getBoard: GetBoardManagerFunc;
+    boardManager: BoardManager;
 }
 
 export interface Coords {
@@ -16,15 +16,16 @@ export interface Coords {
 }
 
 export class BoardPosition implements Coords {
-    positionComponent?: PositionComponent;
-    draggablePositionComponent?: DraggablePositionComponent;
+    // These references to Componenets aren't being used. Should remove later if they are only for testing
+    public positionComponent?: PositionComponent;
+    public draggablePositionComponent?: DraggablePositionComponent;
     
     public readonly x: number;
     public readonly y: number;
-    showDot: boolean;
-    showBigDot: boolean;
+    public showDot: boolean;
+    public showBigDot: boolean;
 
-    getBoardManager: GetBoardManagerFunc;
+    public getBoardManager: GetBoardManagerFunc;
 
     private _piece: Piece | undefined;
 
@@ -33,11 +34,6 @@ export class BoardPosition implements Coords {
             const oldPosition = piece.getPosition();
 
             if (oldPosition !== this) {
-                if (piece.pieceType === 'king') {
-                    console.trace("king debug");
-                    debugger;
-                }
-                
                 oldPosition.piece = undefined;
             }
             
@@ -63,7 +59,7 @@ export class BoardPosition implements Coords {
         this.showBigDot = false;
 
         this.getBoardManager = () => {
-            return positionInit.getBoard();
+            return positionInit.boardManager;
         };
     }
 

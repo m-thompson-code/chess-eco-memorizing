@@ -1,10 +1,9 @@
-import { Piece, PieceColor, PieceType, PieceInit, PromotePieceType } from './piece';
+import { Piece, PieceColor, PieceType, PieceInit, PromotePieceType } from '@app/types/piece';
 import { BoardPosition } from '@app/types/boardPosition';
 
 export type BoardOrientation = 'normal' | 'flipped';
 
 export interface BoardHistory {
-    // pawnMovedTwoSpaces?: boolean;
     moveNotation: string;
     movingPiece: Piece;
     capturedPiece?: Piece;
@@ -35,17 +34,17 @@ export type Board = {
 } & BoardPosition[][];
 
 export class BoardManager {
-    public board: Board;
-    public pieces: Piece[];
-    public whitePieces: Piece[];
-    public blackPieces: Piece[];
+    public readonly board: Board;
+    public readonly pieces: Piece[];
+    public readonly whitePieces: Piece[];
+    public readonly blackPieces: Piece[];
 
     public activePosition?: BoardPosition;
 
     public movedToPosition?: BoardPosition;
     public movedFromPosition?: BoardPosition;
 
-    public history: BoardHistory[];
+    public readonly history: BoardHistory[];
     
     public turnCount: number;
 
@@ -118,7 +117,8 @@ export class BoardManager {
     }
 
     public getPosition(x: number, y: number): BoardPosition {
-        if (!(x === 0 || x === 1 || x === 2 || x === 3 || x === 4 || x === 5 || x === 6 || x === 7) || !(y === 0 || y === 1 || y === 2 || y === 3 || y === 4 || y === 5 || y === 6 || y === 7)) {
+        // if (!(x === 0 || x === 1 || x === 2 || x === 3 || x === 4 || x === 5 || x === 6 || x === 7) || !(y === 0 || y === 1 || y === 2 || y === 3 || y === 4 || y === 5 || y === 6 || y === 7)) {
+        if (x < 0 || x > 7 || y < 0 || y > 7) {
             const message = "Unexpected x or y";
             console.trace(message);
             throw {
@@ -206,6 +206,7 @@ export class BoardManager {
     public setBoardOrientation(boardOrientation: BoardOrientation, disableAnimations?: boolean): void {
         this.boardOrientation = boardOrientation;
 
+        // We need to check all of the pieces (not just the active ones) just in case the end user rewinds
         for (const piece of this.pieces) {
             const boardPosition = this.getBoardPositionStyles(piece.x, piece.y);
 
@@ -223,21 +224,17 @@ export class BoardManager {
     }
 
     static getBoardPositionStyles(boardOrientation: BoardOrientation, x: number, y: number): BoardPositionStyles {
-        let left = "0";
-        let top = "0";
-
-        if (boardOrientation === 'normal') {
-            left = `${x * 12.5}%`;
-            top = `${y * 12.5}%`;
-        } else {
-            left = `${(7 - x) * 12.5}%`;
-            top = `${(7 - y) * 12.5}%`;
+        if (boardOrientation === 'flipped') {
+            return {
+                left: `${(7 - x) * 12.5}%`,
+                top: `${(7 - y) * 12.5}%`,
+            };
         }
 
         return {
-            left: left,
-            top: top,
-        }
+            left: `${x * 12.5}%`,
+            top: `${y * 12.5}%`,
+        };
     }
 
     public getBoardPositionStyles(x: number, y: number): BoardPositionStyles {
@@ -254,9 +251,7 @@ export class BoardManager {
                 const position: BoardPosition = new BoardPosition({
                     x:_x, 
                     y:_y,
-                    getBoard: () => {
-                        return this;
-                    },
+                    boardManager: this,
                 });
 
                 board[_y].push(position);
@@ -307,7 +302,7 @@ export class BoardManager {
         const pieces = this.getActivePieces({
             pieceColor: kingColor === 'white' ? 'black' : 'white',
         });
-        // console.log(pieces);
+
         for (const piece of pieces) {
             const availableMoves: BoardPosition[] = piece.getAvailableMoves(false, false);
 
@@ -340,7 +335,6 @@ export class BoardManager {
     }
 
     public popMoveHistroy(updateUI: boolean): BoardHistory | undefined {
-
         if (!this.turnCount) {
             return;
         }
@@ -352,15 +346,6 @@ export class BoardManager {
         }
 
         this.turn = this.turn === 'white' ? 'black' : 'white';
-
-        // if (this.turn === 'black') {
-        //     boardHistory = this.history[this.history.length - 1].black;
-        //     this.history[this.history.length - 1].black = undefined;
-        // } else {
-        //     boardHistory = this.history.pop()?.white;
-        // }
-
-        // console.log(boardHistory);
 
         const _movingPiece = boardHistory.movingPiece;
         _movingPiece.setPosition(boardHistory.oldPosition);
@@ -438,10 +423,7 @@ export class BoardManager {
     }
 
     public pushMoveHistroy(boardHistory: BoardHistory, updateUI: boolean): BoardHistory {
-        const whiteMove: boolean = this.turn === 'white';//!(this.turnCount % 2);//this.color === 'white';
-
-        if (whiteMove) {
-            
+        if (this.turn === 'white') {
             this.turn = 'black';
             this.blackKingIsInCheck = this.kingIsThreatened('black');
         } else {
@@ -450,8 +432,6 @@ export class BoardManager {
         }
 
         this.history.push(boardHistory);
-
-        // console.log(boardHistory);
 
         this.turnCount += 1;
 
@@ -480,16 +460,16 @@ export class BoardManager {
         } else if (notation === 'O-O-O') {
             const yValue = this.turn === 'white' ? 7 : 0;
 
-            const position = this.getPosition(4, yValue);
+            const position: BoardPosition = this.getPosition(4, yValue);
 
-            const piece = position?.piece;
+            const piece = position.piece;
 
             if (piece && piece.pieceType === 'king') {
-                const newPosition: BoardPosition = this.getPosition(1, yValue);
+                const newPosition: BoardPosition = this.getPosition(2, yValue);
                 boardHistory = piece.moveToPosition(newPosition, true);
             }
         } else {
-            const firstLetter = notation.substring(0, 1);
+            const firstLetter = notation.charAt(0);
             let movementNotation = "";
     
             const pieceType = this.getPieceTypeFromNotationLetter(firstLetter);
@@ -498,22 +478,14 @@ export class BoardManager {
     
             let _notation = notation;
     
+            // TODO handle promotions
             if (_notation.charAt(_notation.length - 1) === '+' || _notation.charAt(_notation.length - 1) === '#') {
                 _notation = _notation.substring(0, _notation.length - 1);
             }
             
             movementNotation = _notation.substring(_notation.length - 2, _notation.length);
 
-            const moveToPosition: BoardPosition | undefined = this.getPositionByNotation(movementNotation);
-
-            if (!moveToPosition) {
-                throw {
-                    message: "Unexpected moveToPosition",
-                    moveToPosition: moveToPosition,
-                    notation: notation,
-                    _notation: _notation,
-                }
-            }
+            const moveToPosition: BoardPosition = this.getPositionByNotation(movementNotation);
 
             const pieces = this.getActivePieces({
                 pieceColor: this.turn,
@@ -541,14 +513,10 @@ export class BoardManager {
                         letters += h;
                     }
 
-                    // console.log(letters, _notation);
-
                     if (_notation.startsWith(letters)) {
                         _filteredPieces.push(piece);
                     }
                 }
-
-                // console.log(_filteredPieces);
 
                 if (_filteredPieces.length === 1) {
                     filteredPieces = _filteredPieces;
@@ -562,15 +530,10 @@ export class BoardManager {
                     const v = piece.getVerticalNotation();
                     let letters = piece.getNotationName() + v;
 
-                    // console.log(letters, _notation);
-
                     if (_notation.startsWith(letters)) {
                         _filteredPieces.push(piece);
                     }
                 }
-
-                // console.log(_filteredPieces);
-
 
                 if (_filteredPieces.length === 1) {
                     filteredPieces = _filteredPieces;
@@ -583,14 +546,10 @@ export class BoardManager {
                 for (const piece of filteredPieces) {
                     let letters = piece.getNotationPosition();
 
-                    // console.log(letters, _notation);
-
                     if (_notation.startsWith(letters)) {
                         _filteredPieces.push(piece);
                     }
                 }
-
-                // console.log(_filteredPieces);
 
                 if (_filteredPieces.length === 1) {
                     filteredPieces = _filteredPieces;
@@ -604,11 +563,11 @@ export class BoardManager {
                     console.error("Mismatch notations", boardHistory?.moveNotation, notation);
                     if (boardHistory) {
                         this.popMoveHistroy(true);
+                        boardHistory = undefined;
                     }
-                    return;
+                } else {
+                    return filteredPieces[0].moveToPosition(moveToPosition, true);
                 }
-
-                return filteredPieces[0].moveToPosition(moveToPosition, true);
             }
     
             throw {
@@ -622,6 +581,7 @@ export class BoardManager {
         }
 
         if (!boardHistory) {
+            console.log(notation, 'O-O-O', notation === 'O-O-O');
             console.error("moveUsingNotation is invalid", notation);
         }
 
@@ -643,8 +603,10 @@ export class BoardManager {
         const y = vMap[vLetter];
 
         if (typeof x === 'undefined' || typeof y === 'undefined') {
+            const message = "Invalid letters";
+            console.trace(message);
             throw {
-                message: "Invalid letters",
+                message: message,
                 letters: letters,
                 x: x,
                 y: y,
@@ -681,6 +643,7 @@ export class BoardManager {
 
         throw {
             message: "Unexpected letter",
+            letter: letter,
         };
     }
 }

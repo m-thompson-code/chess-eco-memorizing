@@ -7,7 +7,7 @@ import { Piece } from '@app/types/piece';
     styleUrls: ['./piece.style.scss']
 })
 export class PieceComponent implements OnInit {
-    @Input() piece?: Piece;
+    @Input() public piece?: Piece;
 
     constructor() {
 

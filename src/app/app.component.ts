@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { BoardManager } from './types/board';
 
-// import ecoOpenings from '@app/eco_openings_metadata.json';
+import ecoOpenings from '@app/eco_openings_metadata.json';
 
 @Component({
     selector: 'app-root',
@@ -23,30 +23,56 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit() {
-        // console.log(ecoOpenings);
-        this.boardManager = new BoardManager();
+        console.log(ecoOpenings);
+        const mainBoardManager =  new BoardManager();
+        this.boardManager = mainBoardManager;
 
         this.boardManagers = [];
 
-        // setTimeout(() => {
-        //     for (let i = 0; i < ecoOpenings.length; i++) {
-        //         try {
-        //             const boardManager = new BoardManager();
-        //             const notation = ecoOpenings[i].notation;
-        //             this.boardManagers?.push(boardManager);
-        //             this.play(boardManager, notation);
-        //             console.log(i);
-        //         }catch(error) {
-        //             console.error(error);
-        //         }
-        //     }
-        // }, 3000);
+        setTimeout(() => {
+            // const startAt = 10153;
+            for (let i = 0; i < ecoOpenings.length; i++) {
+                try {
+                    const boardManager = new BoardManager();
+                    const notation = ecoOpenings[i].notation;
+                    this.boardManagers?.push(boardManager);
+                    this.play(boardManager, 0, notation);
+                    console.log(i);
+                }catch(error) {
+                    console.error(i);
+
+                    console.error(error);
+                    break;
+                }
+            }
+            console.log("COMPLETE");
+        }, 3000);
 
         
 
-        // setTimeout(() => {
-        //     this.play("1.Nf3 d5 2.g3 c5 3.Bg2 Nc6 4.O-O e6 5.d3 Nf6 6.Nbd2 Be7 7.e4 O-O 8.Re1");           
-        // }, 1000);
+        setTimeout(() => {
+            const moves: {
+                white: string,
+                black?: string,
+            }[] = [];
+
+            const notation = "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.h3 c5 7.d5 e6 8.Bd3 exd5 9.exd5 Re8+";
+
+            const notationSplits = notation.split('.');
+
+            for (let i = 1; i < notationSplits.length; i += 1) {
+                const testSplit = notationSplits[i].split(' ');
+
+                moves.push({
+                    white: testSplit[0],
+                    black: testSplit[1],
+                });
+            }
+
+            console.log(moves);
+
+            this.play(mainBoardManager, 300, notation);           
+        }, 1000);
 
         // setTimeout(() => {
         //     this.boardManager = new BoardManager();
@@ -58,7 +84,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.test = inputChangeEvent.target.value;
     }
 
-    play(boardManager: BoardManager, notation: string): void {
+    play(boardManager: BoardManager, delay: number, notation: string): void {
         const moves: {
             white: string,
             black?: string,
@@ -75,27 +101,23 @@ export class AppComponent implements OnInit, AfterViewInit {
             });
         }
 
-        // console.log(moves);
-
-        const time = 0;//300;
+        // const time = 0;//300;
 
         for (let i = 0; i < moves.length; i++) {
             const move = moves[i];
 
-            if (!time) {
+            if (!delay) {
                 boardManager.moveUsingNotation(move.white);
                 move.black && boardManager.moveUsingNotation(move.black);
             } else {
                 setTimeout(() => {
-                    // console.log(move.white);
                     boardManager.moveUsingNotation(move.white);
-                }, 3 * i * time);
+                }, 3 * i * delay);
     
                 if (move.black) {
                     setTimeout(() => {
-                        // console.log(move.black);
                         move.black && boardManager.moveUsingNotation(move.black);
-                    },time + 3 * i * time);
+                    },delay + 3 * i * delay);
                 }
             }
         }

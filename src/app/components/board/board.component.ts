@@ -36,15 +36,15 @@ export class BoardComponent implements OnInit {
         y: 0,
     };
 
-    showNotationLabels: boolean;
+    public showNotationLabels: boolean;
 
-    verticalNotationlabels: number[];
-    horizontalNotationlabels: string[];
+    public verticalNotationlabels: number[];
+    public horizontalNotationlabels: string[];
 
-    showPromotionSelect: boolean;
-    selectPromotionResolve?: (promotePieceType?: PromotePieceType) => void;
-    selectPromotionReject?: (error: any)=>void;
-    promotionColor: PieceColor;
+    public showPromotionSelect: boolean;
+    public selectPromotionResolve?: (promotePieceType?: PromotePieceType) => void;
+    public selectPromotionReject?: (error: any)=>void;
+    public promotionColor: PieceColor;
 
     constructor() {
         this.dragging = false;
@@ -75,7 +75,6 @@ export class BoardComponent implements OnInit {
         if (piece.pieceType === 'pawn' && (newPosition.showDot || newPosition.showBigDot)) {
             if (piece.color === 'white' && newPosition.y === 0 || piece.color === 'black' && newPosition.y === 7) {
                 return this.getPromotionPieceType(piece.color).then(promotionPieceType => {
-                    // console.log(promotionPieceType);
                     if (promotionPieceType) {
                         return this._movePiece(piece, newPosition, promotionPieceType);
                     }
@@ -152,11 +151,11 @@ export class BoardComponent implements OnInit {
         }
     }
 
-    dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
+    public dragPiece(piece: Piece, dragMovedEvent: DragMoved): void {
         if (!this.boardManager) {
             throw {
                 message: "Unexpected missing board",
-            }
+            };
         }
 
         const width = dragMovedEvent.cdkDragMove.source.element.nativeElement.offsetWidth;
@@ -244,7 +243,7 @@ export class BoardComponent implements OnInit {
         if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
-            }
+            };
         }
 
         this.boardManager.activePosition = position;
@@ -258,7 +257,7 @@ export class BoardComponent implements OnInit {
         if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
-            }
+            };
         }
 
         if (this.boardManager.activePosition) {
@@ -303,7 +302,7 @@ export class BoardComponent implements OnInit {
         if (!this.boardManager) {
             throw {
                 message: 'Unexpected missing message',
-            }
+            };
         }
 
         if (!dragMovedEvent.position || !dragMovedEvent.position.piece || dragMovedEvent.position.piece.color !== this.boardManager.turn) {

@@ -13,7 +13,7 @@ export interface PieceInit {
 }
 
 export class Piece implements Coords {
-    public color: PieceColor;
+    public readonly color: PieceColor;
     public pieceType: PieceType;
 
     public x: number;
@@ -72,11 +72,11 @@ export class Piece implements Coords {
         boardPosition.piece = this;
     }
 
-    public resetBoardPositionStyles() {
+    public resetBoardPositionStyles(): void {
         this.setBoardPositionStyles(this.x, this.y);
     }
     
-    public setBoardPositionStyles(x: number, y: number) {
+    public setBoardPositionStyles(x: number, y: number): void {
         const boardPositionStyles = this.getBoardManager().getBoardPositionStyles(x, y);
 
         this.left = boardPositionStyles.left;
@@ -616,10 +616,12 @@ export class Piece implements Coords {
             return 'K';
         }
         
+        const message = "Unknown notationName for piece";
+        console.trace(message);
         throw {
-            message: "Unknown notationName for piece",
+            message: message,
             piece: this,
-        }
+        };
     }
 
     public getHorizontalNotation(): string {
@@ -659,14 +661,6 @@ export class Piece implements Coords {
             oldPosition: oldPosition,
             newPosition: newPosition,
         };
-
-        if (this.pieceType === 'pawn') {
-            if (this.color === 'white' && oldPosition.y - newPosition.y === 2) {
-                // boardHistory.pawnMovedTwoSpaces = true;
-            } else if (this.color === 'black' && newPosition.y - oldPosition.y === 2) {
-                // boardHistory.pawnMovedTwoSpaces = true;
-            }
-        }
 
         this.moveCount += 1;
 
@@ -772,10 +766,6 @@ export class Piece implements Coords {
 
         return undefined;
     }
-
-    // public promotePiece(piece: Piece, pieceType: PieceType, newPosition: BoardPosition) {
-
-    // }
 
     public moveToPosition(newPosition: BoardPosition, updateUI: boolean, promotePieceType?: PromotePieceType): BoardHistory | undefined {
         if (!this.canMoveToPosition(newPosition)) {
@@ -950,7 +940,7 @@ export class Piece implements Coords {
             } | undefined = undefined;
 
             // Pawn promotion
-            if (this.color === 'white' && newPosition.y === 0 || this.color === 'black' && newPosition.y === 7) {
+            if (this.pieceType === 'pawn' && (this.color === 'white' && newPosition.y === 0 || this.color === 'black' && newPosition.y === 7)) {
                 if (!promotePieceType) {
                     throw {
                         message: "Unexpected missing promotePieceType",
@@ -972,15 +962,17 @@ export class Piece implements Coords {
 
             if (putsEnemyInCheck) {
                 const pieces = this.getBoardManager().getActivePieces({
-                    pieceColor: this.color,
+                    pieceColor: this.color === 'white' ? 'black' : 'white',
                 });
 
                 let foundAvailableEnemyMove = false;
+
                 for (const piece of pieces) {
                     const availableMoves = piece.getAvailableMoves(true, false);
 
                     if (!availableMoves.length) {
-                        continue;
+                        foundAvailableEnemyMove = true;
+                        break;
                     }
                 }
 
@@ -999,14 +991,6 @@ export class Piece implements Coords {
                 oldPosition: oldPosition,
                 newPosition: newPosition,
             };
-
-            if (this.pieceType === 'pawn') {
-                if (this.color === 'white' && oldPosition.y - newPosition.y === 2) {
-                    // boardHistory.pawnMovedTwoSpaces = true;
-                } else if (this.color === 'black' && newPosition.y - oldPosition.y === 2) {
-                    // boardHistory.pawnMovedTwoSpaces = true;
-                }
-            }
 
             if (enPassanteData) {
                 boardHistory.enPassante = enPassanteData;
