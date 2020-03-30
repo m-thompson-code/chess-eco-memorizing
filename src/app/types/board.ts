@@ -45,10 +45,7 @@ export class BoardManager {
     public movedToPosition?: BoardPosition;
     public movedFromPosition?: BoardPosition;
 
-    public history: {
-        'white' : BoardHistory;
-        'black'? : BoardHistory;
-    }[];
+    public history: BoardHistory[];
     
     public turnCount: number;
 
@@ -343,62 +340,62 @@ export class BoardManager {
     }
 
     public popMoveHistroy(updateUI: boolean): BoardHistory | undefined {
+
         if (!this.turnCount) {
             return;
         }
 
-        let boardHistory: BoardHistory | undefined = undefined;
+        const boardHistory: BoardHistory | undefined = this.history.pop();
 
-        const whiteMove: boolean = this.turn === 'white';//!(this.turnCount % 2);//this.color === 'white';
-
-        if (whiteMove) {
-            boardHistory = this.history[this.history.length - 1].black;
-            this.history[this.history.length - 1].black = undefined;
-
-            this.turn = 'black';
-        } else {
-            boardHistory = this.history.pop()?.white;
-
-            this.turn = 'white';
+        if (!boardHistory) {
+            return;
         }
+
+        this.turn = this.turn === 'white' ? 'black' : 'white';
+
+        // if (this.turn === 'black') {
+        //     boardHistory = this.history[this.history.length - 1].black;
+        //     this.history[this.history.length - 1].black = undefined;
+        // } else {
+        //     boardHistory = this.history.pop()?.white;
+        // }
 
         // console.log(boardHistory);
 
-        if (boardHistory) {
-            const _movingPiece = boardHistory.movingPiece;
-            _movingPiece.setPosition(boardHistory.oldPosition);
-            
-            const _capturedPiece = boardHistory.capturedPiece;
+        const _movingPiece = boardHistory.movingPiece;
+        _movingPiece.setPosition(boardHistory.oldPosition);
 
-            if (_capturedPiece) {
-                _capturedPiece.active = true;
-                _capturedPiece.setPosition(boardHistory.newPosition);
-            }
-
-            // Handling undoing a castling
-            const _rookPiece = boardHistory.castle?.rook;
-            const _oldRookPosition = boardHistory.castle?.oldRookPosition;
-
-            if (_rookPiece && _oldRookPosition) {
-                _rookPiece.setPosition(_oldRookPosition);
-            }
-
-            // Handling undoing an en passante
-            const _pawnPiece = boardHistory.enPassante?.pawn;
-            const _oldPawnPosition = boardHistory.enPassante?.oldPawnPosition;
-            if (_pawnPiece && _oldPawnPosition) {
-                _pawnPiece.active = true;
-                _pawnPiece.setPosition(_oldPawnPosition);
-            }
-
-            if (boardHistory.promote) {
-                _movingPiece.pieceType = 'pawn';
-            }
-
-            _movingPiece.moveCount -= 1;
+        if (boardHistory.promote) {
+            _movingPiece.pieceType = 'pawn';
         }
 
-        if (whiteMove) {
+        _movingPiece.moveCount -= 1;
+        
+        // Handling undoing capturing piece
+        const _capturedPiece = boardHistory.capturedPiece;
+
+        if (_capturedPiece) {
+            _capturedPiece.active = true;
+            _capturedPiece.setPosition(boardHistory.newPosition);
+        }
+
+        // Handling undoing a castling
+        const _rookPiece = boardHistory.castle?.rook;
+        const _oldRookPosition = boardHistory.castle?.oldRookPosition;
+
+        if (_rookPiece && _oldRookPosition) {
+            _rookPiece.setPosition(_oldRookPosition);
+        }
+
+        // Handling undoing an en passante
+        const _pawnPiece = boardHistory.enPassante?.pawn;
+        const _oldPawnPosition = boardHistory.enPassante?.oldPawnPosition;
+        if (_pawnPiece && _oldPawnPosition) {
+            _pawnPiece.active = true;
+            _pawnPiece.setPosition(_oldPawnPosition);
+        }
+
+        if (this.turn === 'black') {
             this.blackKingIsInCheck = this.kingIsThreatened('black');
         } else {
             this.whiteKingIsInCheck = this.kingIsThreatened('white');
@@ -408,20 +405,21 @@ export class BoardManager {
 
         // UI
         if (updateUI) {
-            if (whiteMove) {
-                this.movedFromPosition = this.history[this.history.length - 1]?.white.oldPosition;
-                this.movedToPosition = this.history[this.history.length - 1]?.white.newPosition;
+            if (this.history.length) {
+                this.movedFromPosition = this.history[this.history.length - 1].oldPosition;
+                this.movedToPosition = this.history[this.history.length - 1].newPosition;
             } else {
-                this.movedFromPosition = this.history[this.history.length - 1]?.black?.oldPosition;
-                this.movedToPosition = this.history[this.history.length - 1]?.black?.newPosition;
+                this.movedFromPosition = undefined;
+                this.movedToPosition = undefined;
             }
     
             if (boardHistory) {
+                // Handling undoing capturing piece UI
                 if (boardHistory.capturedPiece) {
                     boardHistory.capturedPiece.resetBoardPositionStyles();
                 }
 
-                // Handling undoing a castling
+                // Handling undoing a castling UI
                 const _rookPiece = boardHistory.castle?.rook;
                 if (_rookPiece) {
                     _rookPiece.resetBoardPositionStyles();
@@ -443,16 +441,15 @@ export class BoardManager {
         const whiteMove: boolean = this.turn === 'white';//!(this.turnCount % 2);//this.color === 'white';
 
         if (whiteMove) {
-            this.history.push({
-                'white': boardHistory
-            });
+            
             this.turn = 'black';
             this.blackKingIsInCheck = this.kingIsThreatened('black');
         } else {
-            this.history[this.history.length - 1].black = boardHistory;
             this.turn = 'white';
             this.whiteKingIsInCheck = this.kingIsThreatened('white');
         }
+
+        this.history.push(boardHistory);
 
         // console.log(boardHistory);
 

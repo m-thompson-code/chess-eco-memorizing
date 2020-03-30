@@ -9,7 +9,9 @@
         <ng-container *ngIf="boardManager">
             <div class="move-notations">
                 <div *ngFor="let boardHistory of boardManager.history; let i = index" class="move-notation">
-                    <span>{{ i + 1 }}. {{ boardHistory.white.moveNotation }} {{ boardHistory.black ? boardHistory.black.moveNotation : '...' }}</span>
+                    <span>
+                        <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ boardHistory.moveNotation }} 
+                    </span>
                 </div>
             </div>
 
