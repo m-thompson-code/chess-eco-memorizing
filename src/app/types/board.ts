@@ -1,6 +1,8 @@
 import { Piece, PieceColor, PieceType, PieceInit, PromotePieceType } from '@app/types/piece';
 import { BoardPosition } from '@app/types/boardPosition';
 
+export type Grade = 'correct' | 'incorrect';
+
 export type BoardOrientation = 'normal' | 'flipped';
 
 export interface BoardHistory {
@@ -67,7 +69,11 @@ export class BoardManager {
     public autoWhite: boolean;
     public autoBlack: boolean;
 
+    public completed: boolean;
+
     constructor(boardOrientation?: BoardOrientation) {
+        this.completed = false;
+
         this.boardOrientation = boardOrientation || 'normal';
 
         this.board = this._getInitalizedBoard();
@@ -124,6 +130,10 @@ export class BoardManager {
 
     public attemptAutoPlay(): void {
         if (!this.notationMoves) {
+            return;
+        }
+
+        if (this.incorrectPosition) {
             return;
         }
 
@@ -472,6 +482,8 @@ export class BoardManager {
             this.activePosition = undefined;
 
             this.hideMovementDots();
+
+            this._updateGradeUI();
         }
         // End UI
 
@@ -482,13 +494,97 @@ export class BoardManager {
         return boardHistory;
     }
 
+    private gradeHistoryAtIndex(index: number): Grade | undefined {
+        if (!this.notationMoves) {
+            return;
+        }
+
+        if (index < 0 || index > this.notationMoves.length) {
+            return;
+        }
+
+        if (this.history[index].moveNotation !== this.notationMoves[index]) {
+            return 'incorrect';
+        }
+
+        return 'correct';
+    }
+    
+    private _gradeMoveNotations(): void {
+        if (!this.notationMoves || this.history.length !== this.notationMoves.length) {
+            return;
+        }
+
+        for (let i = 0; i < this.notationMoves.length; i++) {
+            const notationMove = this.notationMoves[i];
+            if (notationMove !== this.history[i].moveNotation) {
+                return;
+            }
+        }
+
+        this.completed = true;
+    }
+
+    private _updateGradeUI(): void {
+        // Avoid updating grade UI if both sides are computer and not human
+        if (this.autoWhite && this.autoBlack) {
+            this.correctPosition = undefined;
+            this.incorrectPosition = undefined;
+            return;
+        }
+
+        let index = this.history.length - 1;
+
+        let lastBoardHistory: BoardHistory | undefined = this.history[index];
+
+        while(index > 0) {
+            if ((lastBoardHistory.movingPiece.color === 'white' && this.autoWhite) || (lastBoardHistory.movingPiece.color === 'black' && this.autoBlack)) {
+                index -= 1;
+                if (index < 0) {
+                    lastBoardHistory = undefined;
+                    break;
+                }
+
+                lastBoardHistory = this.history[index];
+                continue;
+            }
+
+            break;
+        }
+
+        const grade = this.gradeHistoryAtIndex(index);
+
+        if (grade) {
+            if (lastBoardHistory) {
+                if (grade === 'correct') {
+                    this.correctPosition = lastBoardHistory.newPosition;
+                    this.incorrectPosition = undefined;
+                } else if (grade === 'incorrect') {
+                    this.correctPosition = undefined;
+                    this.incorrectPosition = lastBoardHistory.newPosition;
+                } else {
+                    this.correctPosition = undefined;
+                    this.incorrectPosition = undefined;
+                }
+            } else {
+                this.correctPosition = undefined;
+                this.incorrectPosition = undefined;
+            }
+        } else {
+            this.correctPosition = undefined;
+            this.incorrectPosition = undefined;
+        }
+
+        if (this.correctPosition) {
+            this._gradeMoveNotations();
+        }
+    }
+
     public pushMoveHistory(boardHistory: BoardHistory, updateUI: boolean, resetRedoHistory: boolean): BoardHistory {
         if (this.turn === 'white') {
             this.turn = 'black';
-            // this.blackKingIsInCheck = this.kingIsThreatened('black');
         } else {
             this.turn = 'white';
-            // this.whiteKingIsInCheck = this.kingIsThreatened('white');
         }
 
         this.history.push(boardHistory);
@@ -499,13 +595,13 @@ export class BoardManager {
             this.movedFromPosition = boardHistory.oldPosition;
             this.movedToPosition = boardHistory.newPosition;
 
-            this.correctPosition = boardHistory.newPosition;
+            this._updateGradeUI();
         }
 
         if (resetRedoHistory) {
             this.redoHistroy = [];
             console.log("attemptAutoPlay here");
-            // this.attemptAutoPlay();
+            this.attemptAutoPlay();
         }
 
         return boardHistory;
@@ -554,7 +650,7 @@ export class BoardManager {
 
         this.turnCount += 1;
 
-        // UI
+        // UI before move
         if (updateUI) {
             this.movedFromPosition = boardHistory.oldPosition;
             this.movedToPosition = boardHistory.newPosition;
@@ -576,9 +672,15 @@ export class BoardManager {
 
             this.hideMovementDots();
         }
-        // End UI
+        // End UI before move
         
         this.history.push(boardHistory);
+
+        // UI after move
+        if (updateUI) {
+            this._updateGradeUI();
+        }
+        // End UI after move
         
         return boardHistory;
     }

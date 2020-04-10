@@ -1,4 +1,4 @@
-.position {
+.board-position {
     flex-grow: 1;
     height: 100%;
     width: 100%;
@@ -9,24 +9,13 @@
     position: relative;
 }
 
-.position.odd {
+.board-position.odd {
     background: #779556;
 }
 
-.position.even {
+.board-position.even {
     background: #EBECD0;
 }
-
-// .position.moved-from {
-//     background: yellow;
-//     color: black;
-// }
-
-// .position.moved-to {
-//     background: yellow;
-
-//     color: white;
-// }
 
 .highlight {
     position: absolute;
@@ -46,15 +35,18 @@
 
 .highlight.correct {
     background: green;
-    color: black;
 }
 
-.position.hover-start-from {
+.highlight.incorrect {
+    background: red;
+}
+
+.board-position.hover-start-from {
     background: lightsalmon;// debugging only
     color: black;
 }
 
-.position.hover-start-from {
+.board-position.hover-start-from {
     background: lightsalmon;// debugging only
     color: black;
 }

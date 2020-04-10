@@ -1,31 +1,11 @@
-.board-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    // flex-direction: column;
-    flex-direction: row;
-}
-
-.board-wrapper {
-    display: block;
+.wrapper {
+    height: 100vh;
     width: 100vw;
-    height: 100%;
-    max-width: 500px;
-    margin: 6px;
-}
 
-.move-notations {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    align-items: center;
 
-    overflow-x: auto;
-    white-space: nowrap;
-        
-    .move-notation {
-        margin-right: 24px;
-
-        span {
-            white-space:nowrap;
-        }
-    }
+    overflow-x: hidden;
+    overflow-y: auto;
 }

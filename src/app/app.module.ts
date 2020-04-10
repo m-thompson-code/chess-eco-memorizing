@@ -7,19 +7,14 @@ import { AppComponent } from './app.component';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
-import { BoardModule } from './components/board/board.module';
-
 @NgModule({
     declarations: [
         AppComponent,
-        // SquareDirective
     ],
     imports: [
         BrowserModule,
         AppRoutingModule,
         BrowserAnimationsModule,
-
-        BoardModule,
 
         DragDropModule,
     ],

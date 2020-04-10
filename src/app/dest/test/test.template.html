@@ -1,0 +1,42 @@
+<div class="container box-shadow">
+    <div class="board-container">
+        <div class="board-wrapper">
+            <moo-board [boardManager]="boardManager"></moo-board>
+        </div>
+    </div>
+
+    <ng-container *ngIf="boardManager">
+        <div *ngIf="boardManager.notationMoves" class="move-notations">
+            <div *ngFor="let notationMove of boardManager.notationMoves; let i = index" [class]="'move-notation' + (i === boardManager.history.length ? ' last' : '')">
+                <span>
+                    <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ notationMove }} 
+                </span>
+            </div>
+        </div>
+
+        <div class="move-notations">
+            <div *ngFor="let boardHistory of boardManager.history; let i = index; let last = last" [class]="'move-notation' + (last ? ' last' : '')">
+                <span>
+                    <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ boardHistory.moveNotation }} 
+                </span>
+            </div>
+        </div>
+
+        <div>
+            <a (click)="boardManager && boardManager.popMoveHistroy(true, true)">Back</a> | <a (click)="boardManager && boardManager.redoMoveHistroy(true)">Forward</a>
+        </div>
+        
+        <div>
+            Turn: {{ boardManager.turn }} Turn count: {{ boardManager.turnCount }}
+        </div>
+
+        <div>
+           <input [value]="inputText" (change)="updateValue($event)">
+           <a (click)="boardManager && boardManager.moveUsingNotation(inputText); inputText = ''">Move</a>
+        </div>
+        
+        <div>
+            <a (click)="boardManager && boardManager.flipBoardOrientation(true)">Flip board</a>
+        </div>
+    </ng-container>
+</div>
