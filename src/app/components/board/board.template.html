@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <div class="completed box-shadow" *ngIf="boardManager.completed">
+    <div class="completed box-shadow" *ngIf="boardManager && boardManager.completed" (click)="completed.emit()">
         <span>NEXT</span>
     </div>
 </div>

@@ -13,9 +13,9 @@ import { DragMoved, DragStarted, DragEnded, HoverElement } from '../position/pos
 export class BoardComponent implements OnInit {
     @Input() public boardManager?: BoardManager;
 
-    @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
-    @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
-    @Output() public dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter;
+    @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter();
+    @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter();
+    @Output() public dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter();
         
     public yDelta?: number;
     public xDelta?: number;
@@ -45,6 +45,8 @@ export class BoardComponent implements OnInit {
     public selectPromotionResolve?: (promotePieceType?: PromotePieceType) => void;
     public selectPromotionReject?: (error: any)=>void;
     public promotionColor: PieceColor;
+
+    @Output() public completed: EventEmitter<void> = new EventEmitter();
 
     constructor() {
         this.dragging = false;

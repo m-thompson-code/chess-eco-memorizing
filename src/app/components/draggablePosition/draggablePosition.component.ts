@@ -45,9 +45,9 @@ export class DraggablePositionComponent implements OnInit {
     @Input() public hoverPosition?: BoardPosition;
     @Input() public touchDragging?: boolean;
 
-    @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter;
-    @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter;
-    @Output() public dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter;
+    @Output() public dragStarted: EventEmitter<DragStarted<HoverElement>> = new EventEmitter();
+    @Output() public dragMoved: EventEmitter<DragMoved<HoverElement>> = new EventEmitter();
+    @Output() public dragEnded: EventEmitter<DragEnded<HoverElement>> = new EventEmitter();
 
     constructor() {
 

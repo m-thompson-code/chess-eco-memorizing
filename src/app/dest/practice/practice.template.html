@@ -1,0 +1,45 @@
+<div class="container box-shadow">
+    <div class="title">
+        {{ title }}
+    </div>
+    <div class="board-container">
+        <div class="board-wrapper">
+            <moo-board [boardManager]="boardManager" (completed)="goNext()"></moo-board>
+        </div>
+    </div>
+
+    <ng-container *ngIf="boardManager">
+        <div class="navigation">
+            <div [class]="'back' + (boardManager.history.length ? ' active' : '')" (click)="boardManager && boardManager.popMoveHistroy(true, true)">
+                BACK
+            </div>
+
+            <div [class]="'back' + (boardManager.history.length ? ' active' : '')" (click)="boardManager && boardManager.redoMoveHistroy(true)">
+                FORWARD
+            </div>
+        </div>
+
+        <div *ngIf="boardManager.notationMoves" class="move-notations">
+            <div *ngFor="let notationMove of boardManager.notationMoves; let i = index" [class]="'move-notation' + (i === boardManager.history.length ? ' last' : '')">
+                <span>
+                    <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ notationMove }} 
+                </span>
+            </div>
+        </div>
+
+        <div class="move-notations">
+            <div *ngFor="let boardHistory of boardManager.history; let i = index; let last = last" [class]="'move-notation' + (last ? ' last' : '')">
+                <span>
+                    <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ boardHistory.moveNotation }} 
+                </span>
+            </div>
+        </div>
+
+        
+        
+        <div>
+            <a (click)="boardManager && boardManager.flipBoardOrientation(true)">Flip board</a>
+        </div>
+    </ng-container>
+    <a [routerLink]="['/practice', rand]">Rand {{rand}}</a>
+</div>
