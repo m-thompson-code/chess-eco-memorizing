@@ -26,53 +26,54 @@ export class AppComponent implements OnInit, AfterViewInit {
         console.log(ecoOpenings);
         const mainBoardManager =  new BoardManager();
         this.boardManager = mainBoardManager;
+        mainBoardManager.setNotation("1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.h3 c5 7.d5 e6 8.Bd3 exd5 9.exd5 Re8+");
+        mainBoardManager.setAutoPlay({
+            white: false,
+            black: true,
+        });
 
         this.boardManagers = [];
 
-        setTimeout(() => {
-            // const startAt = 10153;
-            for (let i = 0; i < ecoOpenings.length; i++) {
-                try {
-                    const boardManager = new BoardManager();
-                    const notation = ecoOpenings[i].notation;
-                    this.boardManagers?.push(boardManager);
-                    this.play(boardManager, 0, notation);
-                    console.log(i);
-                }catch(error) {
-                    console.error(i);
+        // setTimeout(() => {
+        //     // const startAt = 10153;
+        //     for (let i = 0; i < ecoOpenings.length; i++) {
+        //         try {
+        //             const boardManager = new BoardManager();
+        //             const notation = ecoOpenings[i].notation;
+        //             this.boardManagers?.push(boardManager);
+        //             this.play(boardManager, 0, notation);
+        //             console.log(i);
+        //         }catch(error) {
+        //             console.error(i);
 
-                    console.error(error);
-                    break;
-                }
-            }
-            console.log("COMPLETE");
-        }, 3000);
+        //             console.error(error);
+        //             break;
+        //         }
+        //     }
+        //     console.log("COMPLETE");
+        // }, 3000);
 
-        
+        // setTimeout(() => {
+        //     const notation = "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.h3 c5 7.d5 e6 8.Bd3 exd5 9.exd5 Re8+";
 
-        setTimeout(() => {
-            const moves: {
-                white: string,
-                black?: string,
-            }[] = [];
+        //     const notationSplits = notation.split('.');
 
-            const notation = "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.h3 c5 7.d5 e6 8.Bd3 exd5 9.exd5 Re8+";
+        //     const moves: string[] = [];
 
-            const notationSplits = notation.split('.');
+        //     for (const notificationSplit of notationSplits) {
+        //         const moveSplits = notificationSplit.split(' ');
 
-            for (let i = 1; i < notationSplits.length; i += 1) {
-                const testSplit = notationSplits[i].split(' ');
+        //         moves.push(moveSplits[0]);
 
-                moves.push({
-                    white: testSplit[0],
-                    black: testSplit[1],
-                });
-            }
+        //         if (moveSplits[1]) {
+        //             moves.push(moveSplits[1]);
+        //         }
+        //     }
 
-            console.log(moves);
+        //     console.log(moves);
 
-            this.play(mainBoardManager, 300, notation);           
-        }, 1000);
+        //     this.play(mainBoardManager, 300, notation);           
+        // }, 1000);
 
         // setTimeout(() => {
         //     this.boardManager = new BoardManager();

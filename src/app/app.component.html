@@ -7,6 +7,14 @@
         </div>
 
         <ng-container *ngIf="boardManager">
+            <div *ngIf="boardManager.notationMoves" class="move-notations">
+                <div *ngFor="let notationMove of boardManager.notationMoves; let i = index" class="move-notation">
+                    <span>
+                        <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ notationMove }} 
+                    </span>
+                </div>
+            </div>
+
             <div class="move-notations">
                 <div *ngFor="let boardHistory of boardManager.history; let i = index" class="move-notation">
                     <span>
@@ -16,16 +24,16 @@
             </div>
 
             <div>
-                <a (click)="boardManager && boardManager.popMoveHistroy(true)">Back</a>
+                <a (click)="boardManager && boardManager.popMoveHistroy(true, true)">Back</a> | <a (click)="boardManager && boardManager.redoMoveHistroy(true)">Forward</a>
             </div>
             
             <div>
                 Turn: {{ boardManager.turn }} Turn count: {{ boardManager.turnCount }}
             </div>
-    
+<!--     
             <div>
                 White: {{ boardManager.whiteKingIsInCheck ? 'IN CHECK' : 'SAFE' }} | Black: {{ boardManager.blackKingIsInCheck ? 'IN CHECK' : 'SAFE' }}
-            </div>
+            </div> -->
 
             <div>
                <input [value]="test" (change)="updateValue($event)">

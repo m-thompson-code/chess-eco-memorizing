@@ -15,6 +15,8 @@ export interface Coords {
     y: number;
 }
 
+// export type Grade = 'correct' | 'incorrect';
+
 export class BoardPosition implements Coords {
     // These references to Componenets aren't being used. Should remove later if they are only for testing
     public positionComponent?: PositionComponent;
@@ -24,6 +26,8 @@ export class BoardPosition implements Coords {
     public readonly y: number;
     public showDot: boolean;
     public showBigDot: boolean;
+
+    // public grade?: Grade;
 
     public getBoardManager: GetBoardManagerFunc;
 

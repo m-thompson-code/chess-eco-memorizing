@@ -664,12 +664,12 @@ export class Piece implements Coords {
 
         this.moveCount += 1;
 
-        this.getBoardManager().pushMoveHistroy(boardHistory, false);
+        this.getBoardManager().pushMoveHistory(boardHistory, false, false);
 
         const kingIsThreatened = this.getBoardManager().kingIsThreatened(this.color);
 
         // Move piece to back to oldPosition
-        this.getBoardManager().popMoveHistroy(false);
+        this.getBoardManager().popMoveHistroy(false, false);
 
         return kingIsThreatened;
     }
@@ -682,20 +682,26 @@ export class Piece implements Coords {
             if (this.moveCount === 0) {
                 if (newPosition.x === 7 || newPosition.x === 6) {
                     const castleToPosition: BoardPosition = this.getBoardManager().getPosition(6, this.y);
-                    const queenRookPosition: BoardPosition = this.getBoardManager().getPosition(7, this.y);
+                    const oldKingRookPosition: BoardPosition = this.getBoardManager().getPosition(7, this.y);
 
-                    const queenRook = queenRookPosition.piece;
+                    const kingRook = oldKingRookPosition.piece;
                     
-                    if (!queenRook) {
+                    if (!kingRook) {
                         throw {
-                            message: "Unexpected missing queenRook",
+                            message: "Unexpected missing kingRook",
                             piece: this,
                             newPosition: newPosition,
-                            queenRookPosition: queenRookPosition,
-                            queenRook: queenRook,
+                            oldKingRookPosition: oldKingRookPosition,
+                            kingRook: kingRook,
                         };
                     }
-                    
+
+                    this.setPosition(castleToPosition);
+
+                    const newKingRookPosition: BoardPosition = this.getBoardManager().getPosition(5, this.y);
+
+                    kingRook.setPosition(newKingRookPosition);
+
                     const boardHistory: BoardHistory = {
                         moveNotation: 'O-O',
                         movingPiece: this,
@@ -703,19 +709,14 @@ export class Piece implements Coords {
                         oldPosition: oldPosition,
                         newPosition: castleToPosition,
                         castle: {
-                            rook: queenRook,
-                            oldRookPosition: queenRookPosition,
+                            rook: kingRook,
+                            oldRookPosition: oldKingRookPosition,
+                            newRookPosition: newKingRookPosition,
                         },
                     };
 
-                    this.setPosition(castleToPosition);
-
-                    const newKingRookPosition: BoardPosition = this.getBoardManager().getPosition(5, this.y);
-
-                    queenRook.setPosition(newKingRookPosition);
-
                     if (updateUI) {
-                        queenRook.resetBoardPositionStyles();
+                        kingRook.resetBoardPositionStyles();
                     }
 
                     return boardHistory;
@@ -723,19 +724,25 @@ export class Piece implements Coords {
 
                 if (newPosition.x === 0 || newPosition.x === 2) {
                     const castleToPosition: BoardPosition = this.getBoardManager().getPosition(2, this.y);
-                    const queenRookPosition: BoardPosition = this.getBoardManager().getPosition(0, this.y);
+                    const oldQueenRookPosition: BoardPosition = this.getBoardManager().getPosition(0, this.y);
 
-                    const queenRook = queenRookPosition.piece;
+                    const queenRook = oldQueenRookPosition.piece;
 
                     if (!queenRook) {
                         throw {
                             message: "Unexpected missing queenRook",
                             piece: this,
                             newPosition: newPosition,
-                            queenRookPosition: queenRookPosition,
+                            oldQueenRookPosition: oldQueenRookPosition,
                             queenRook: queenRook,
                         };
                     }
+
+                    this.setPosition(castleToPosition);
+
+                    const newQueenRookPosition: BoardPosition = this.getBoardManager().getPosition(3, this.y);
+
+                    queenRook.setPosition(newQueenRookPosition);
                     
                     const boardHistory: BoardHistory = {
                         moveNotation: 'O-O-O',
@@ -745,15 +752,10 @@ export class Piece implements Coords {
                         newPosition: castleToPosition,
                         castle: {
                             rook: queenRook,
-                            oldRookPosition: queenRookPosition,
+                            oldRookPosition: oldQueenRookPosition,
+                            newRookPosition: newQueenRookPosition,
                         },
                     };
-
-                    this.setPosition(castleToPosition);
-
-                    const newQueenRookPosition: BoardPosition = this.getBoardManager().getPosition(3, this.y);
-
-                    queenRook.setPosition(newQueenRookPosition);
 
                     if (updateUI) {
                         queenRook.resetBoardPositionStyles();
@@ -767,7 +769,7 @@ export class Piece implements Coords {
         return undefined;
     }
 
-    public moveToPosition(newPosition: BoardPosition, updateUI: boolean, promotePieceType?: PromotePieceType): BoardHistory | undefined {
+    public moveToPosition(newPosition: BoardPosition, updateUI: boolean, resetRedoHistory: boolean, promotePieceType?: PromotePieceType): BoardHistory | undefined {
         if (!this.canMoveToPosition(newPosition)) {
             return;
         }
@@ -1011,6 +1013,6 @@ export class Piece implements Coords {
 
         this.moveCount += 1;
 
-        return this.getBoardManager().pushMoveHistroy(boardHistory, updateUI);
+        return this.getBoardManager().pushMoveHistory(boardHistory, updateUI, resetRedoHistory);
     }
 }

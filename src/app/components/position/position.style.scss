@@ -17,34 +17,46 @@
     background: #EBECD0;
 }
 
-.position.active {
+// .position.moved-from {
+//     background: yellow;
+//     color: black;
+// }
+
+// .position.moved-to {
+//     background: yellow;
+
+//     color: white;
+// }
+
+.highlight {
+    position: absolute;
+
+    opacity: .5;
+
+    height: 100%;
+    width: 100%;
+}
+
+.highlight.active {
     background: orange;
+}
+.highlight.moved-from,.highlight.moved-to {
+    background: yellow;
+}
+
+.highlight.correct {
+    background: green;
     color: black;
 }
 
 .position.hover-start-from {
-    background: yellow;
+    background: lightsalmon;// debugging only
     color: black;
 }
 
 .position.hover-start-from {
-    background: yellow;
+    background: lightsalmon;// debugging only
     color: black;
-}
-
-.position.hover {
-    color: white;
-}
-
-.position.moved-from {
-    background: yellowgreen;
-    color: black;
-}
-
-.position.moved-to {
-    background: yellowgreen;
-
-    color: white;
 }
 
 .dot {
@@ -59,4 +71,22 @@
 .dot.with-piece, .big-dot {
     width: 75%;
     height: 75%;
+}
+
+.overlap-icon {
+    position: absolute;
+    right: -13%;
+    top: -13%;
+    width: 40%;
+    height: 40%;
+    z-index: 1;
+    border-radius: 50%;
+}
+
+.overlap-icon.correct {
+    background: green;
+}
+
+.overlap-icon.incorrect {
+    background: red;
 }

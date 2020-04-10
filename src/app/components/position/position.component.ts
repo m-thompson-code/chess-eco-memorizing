@@ -48,7 +48,10 @@ export class PositionComponent implements OnInit {
     @Input() public hoverPosition?: BoardPosition;
     @Input() public movedToPosition?: BoardPosition;
     @Input() public movedFromPosition?: BoardPosition;
-    
+
+    @Input() public correctPosition?: BoardPosition;
+    @Input() public incorrectPosition?: BoardPosition;
+
     constructor() {
 
     }

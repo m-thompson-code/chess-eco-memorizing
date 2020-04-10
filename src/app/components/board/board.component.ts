@@ -144,7 +144,7 @@ export class BoardComponent implements OnInit {
             return;
         }
 
-        const moved = piece.moveToPosition(newPosition, true, promotionPieceType);
+        const moved = piece.moveToPosition(newPosition, true, true, promotionPieceType);
 
         if (!moved) {
             piece.resetBoardPositionStyles();
@@ -267,6 +267,44 @@ export class BoardComponent implements OnInit {
         }
     }
 
+    private cancelDrag(): void {
+        this.hoverStartFromPosition = undefined;
+        this.hoverPosition = undefined;
+        this.dragging = false;
+        this.touchDragging = false;
+        this.deactivatePosition();
+    }
+
+    private userCanInteractWithPiece(position: BoardPosition): boolean {
+        if (!this.boardManager) {
+            throw {
+                message: 'Unexpected missing message',
+            };
+        }
+
+        if (!position) {
+            return false;
+        }
+
+        if (!position.piece) {
+            return false;
+        }
+
+        if (position.piece.color === 'white' && this.boardManager.autoWhite) {
+            return false;
+        }
+        
+        if (position.piece.color === 'black' && this.boardManager.autoBlack) {
+            return false;
+        }
+
+        if (this.boardManager.turn !== position.piece.color) {
+            return false;
+        }
+
+        return true;
+    }
+
     public handleDragStarted(dragStartedEvent: DragStarted): void {
         if (!this.boardManager) {
             throw {
@@ -277,12 +315,8 @@ export class BoardComponent implements OnInit {
         this.hoverStartFromPosition = undefined;
         this.hoverPosition = undefined;
 
-        if (!dragStartedEvent.position || !dragStartedEvent.position.piece || dragStartedEvent.position.piece.color !== this.boardManager.turn) {
-            this.hoverStartFromPosition = undefined;
-            this.hoverPosition = undefined;
-            this.dragging = false;
-            this.touchDragging = false;
-            this.deactivatePosition();
+        if (!this.userCanInteractWithPiece(dragStartedEvent.position)) {
+            this.cancelDrag();
             return;
         }
 
@@ -305,12 +339,8 @@ export class BoardComponent implements OnInit {
             };
         }
 
-        if (!dragMovedEvent.position || !dragMovedEvent.position.piece || dragMovedEvent.position.piece.color !== this.boardManager.turn) {
-            this.hoverStartFromPosition = undefined;
-            this.hoverPosition = undefined;
-            this.dragging = false;
-            this.touchDragging = false;
-            this.deactivatePosition();
+        if (!this.userCanInteractWithPiece(dragMovedEvent.position)) {
+            this.cancelDrag();
             return;
         }
 
@@ -355,13 +385,9 @@ export class BoardComponent implements OnInit {
         this.dragging = false;
         this.touchDragging = false;
 
-        if (!dragEndedEvent.position || !dragEndedEvent.position.piece || dragEndedEvent.position.piece.color !== this.boardManager.turn) {
-            this.hoverStartFromPosition = undefined;
-            this.hoverPosition = undefined;
-            this.dragging = false;
-            this.touchDragging = false;
-            this.deactivatePosition();
-            return;// Promise.resolve();
+        if (!this.userCanInteractWithPiece(dragEndedEvent.position)) {
+            this.cancelDrag();
+            return;
         }
 
         const event = dragEndedEvent.cdkDragEnd;
@@ -392,12 +418,10 @@ export class BoardComponent implements OnInit {
             return await this.movePiece(this.boardManager.activePosition.piece, position);
         }
 
-        if (!position.piece) {
+        if (!this.userCanInteractWithPiece(position)) {
             return;
         }
 
-        if (this.boardManager.turn === position.piece.color) {
-            this.activatePosition(position);
-        }
+        this.activatePosition(position);
     }
 }
