@@ -1,4 +1,4 @@
-import { BoardHistory, BoardManager } from '@app/types/board';
+import { BoardHistory, BoardManager } from '@app/types/boardManager';
 import { BoardPosition, Coords, GetBoardManagerFunc, GetBoardPositionFunc } from '@app/types/boardPosition';
 
 export type PieceColor = 'white' | 'black';
@@ -669,7 +669,7 @@ export class Piece implements Coords {
         const kingIsThreatened = this.getBoardManager().kingIsThreatened(this.color);
 
         // Move piece to back to oldPosition
-        this.getBoardManager().popMoveHistroy(false, false);
+        this.getBoardManager().popBoardHistory(false, false);
 
         return kingIsThreatened;
     }

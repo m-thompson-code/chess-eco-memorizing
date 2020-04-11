@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 
-import { BoardManager } from '@app/types/board';
+import { BoardManager } from '@app/types/boardManager';
 
-import ecoOpenings from '@app/eco_openings_metadata.json';
-
+import { ECOService, EcoOpening } from '@app/services/eco.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'moo-test',
@@ -17,23 +17,33 @@ export class TestComponent implements OnInit {
 
     public inputText: string;
 
-    constructor() {
+    public ecoOpenings: EcoOpening[] = [];
+
+    constructor(private router: Router, private ecoService: ECOService) {
         this.inputText = "";
     }
 
     public ngOnInit(): void {
-        console.log(ecoOpenings);
+        console.log(this.ecoService.ecoOpenings);
         const mainBoardManager =  new BoardManager();
         this.boardManager = mainBoardManager;
         // mainBoardManager.setNotation("1.d4 Nf6");
-        mainBoardManager.setNotation("1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.h3 c5 7.d5 e6 8.Bd3 exd5 9.exd5 Re8+");
-        mainBoardManager.setAutoPlay({
-            white: false,
-            black: true,
-        });
+        // mainBoardManager.setNotation("1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.h3 c5 7.d5 e6 8.Bd3 exd5 9.exd5 Re8+");
+        // mainBoardManager.setAutoPlay({
+        //     white: false,
+        //     black: true,
+        // });
+
+        this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation('');
 
         this.boardManagers = [];
         console.log(this.boardManagers);
+
+        this.boardManager.moveMadeCallback = () => {
+            if (this.boardManager) {
+                this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation(this.boardManager.getNotation()) || [];
+            }
+        };
 
         // setTimeout(() => {
         //     // const startAt = 10153;
@@ -115,7 +125,7 @@ export class TestComponent implements OnInit {
                 if (move.black) {
                     setTimeout(() => {
                         move.black && boardManager.moveUsingNotation(move.black);
-                    },delay + 3 * i * delay);
+                    }, delay + 3 * i * delay);
                 }
             }
         }
@@ -123,6 +133,11 @@ export class TestComponent implements OnInit {
     
     public updateValue(inputChangeEvent: any) {
         this.inputText = inputChangeEvent.target.value;
+    }
+
+    public practice(): Promise<boolean> {
+        const queryNotation = (this.boardManager?.getNotation() || '').replace(/ /g, '_').replace(/\./g, 'dot');
+        return this.router.navigate(['practice', 0, queryNotation]);
     }
 
     ngOnDestroy() {

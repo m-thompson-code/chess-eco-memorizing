@@ -1,4 +1,16 @@
-<div class="container box-shadow">
+<div *ngIf="boardManager" class="container box-shadow">
+    <div class="move-notations">
+        <div *ngFor="let boardHistory of boardManager.boardHistory; let i = index; let last = last" [class]="'move-notation' + (last ? ' last' : '')">
+            <span>
+                <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ boardHistory.moveNotation }}
+            </span>
+        </div>
+
+        <div class="move-notation">
+            <span>&nbsp;</span>
+        </div>
+    </div>
+
     <div class="board-container">
         <div class="board-wrapper">
             <moo-board [boardManager]="boardManager"></moo-board>
@@ -6,28 +18,24 @@
     </div>
 
     <ng-container *ngIf="boardManager">
-        <div *ngIf="boardManager.notationMoves" class="move-notations">
-            <div *ngFor="let notationMove of boardManager.notationMoves; let i = index" [class]="'move-notation' + (i === boardManager.history.length ? ' last' : '')">
-                <span>
-                    <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ notationMove }} 
-                </span>
+        <div class="navigation">
+            <div [class]="'back' + (boardManager.boardHistory.length ? ' active' : '')" (click)="boardManager && boardManager.popBoardHistory(true, true)">
+                BACK
+            </div>
+
+            <div [class]="'back' + (boardManager.boardHistory.length ? ' active' : '')" (click)="boardManager && boardManager.redoMoveHistroy(true)">
+                FORWARD
             </div>
         </div>
 
-        <div class="move-notations">
-            <div *ngFor="let boardHistory of boardManager.history; let i = index; let last = last" [class]="'move-notation' + (last ? ' last' : '')">
-                <span>
-                    <span *ngIf="i % 2 === 0">{{ i / 2 + 1 }}. </span>{{ boardHistory.moveNotation }} 
-                </span>
+        <div class="next" (click)="practice()">
+            <div [class]="'back'">
+                PRACTICE
             </div>
-        </div>
-
-        <div>
-            <a (click)="boardManager && boardManager.popMoveHistroy(true, true)">Back</a> | <a (click)="boardManager && boardManager.redoMoveHistroy(true)">Forward</a>
         </div>
         
         <div>
-            Turn: {{ boardManager.turn }} Turn count: {{ boardManager.turnCount }}
+            Turn: {{ boardManager.turn }} Turn count: {{ boardManager.turnCount }} Openings: {{ ecoOpenings.length }}
         </div>
 
         <div>

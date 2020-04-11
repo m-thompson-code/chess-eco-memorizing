@@ -1,4 +1,4 @@
-<div mooSquare class="board box-shadow">
+<div mooSquare class="board box-shadow" (click)="handleBoardClick($event)">
     <ng-container *ngIf="boardManager">
         <div [class]="'background-layer' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
             <div *ngFor="let row of boardManager.board; let y = index" [class]="'row' + (boardManager.boardOrientation === 'flipped' ? ' flipped' : '')">
@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <div class="completed box-shadow" *ngIf="boardManager && boardManager.completed" (click)="completed.emit()">
+    <div class="completed box-shadow" *ngIf="boardManager && boardManager.completed && showCompleted" (click)="completed.emit()">
         <span>NEXT</span>
     </div>
 </div>

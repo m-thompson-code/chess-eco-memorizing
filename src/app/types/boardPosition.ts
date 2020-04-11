@@ -1,7 +1,7 @@
 import { PositionComponent } from '@app/components/position/position.component';
 import { DraggablePositionComponent } from '@app/components/draggablePosition/draggablePosition.component';
 import { Piece } from '@app/types/piece';
-import { BoardManager } from '@app/types/board';
+import { BoardManager } from '@app/types/boardManager';
 
 export type GetBoardManagerFunc = () => BoardManager;
 export type GetBoardPositionFunc = () => BoardPosition;

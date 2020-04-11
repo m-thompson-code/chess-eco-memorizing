@@ -10,6 +10,10 @@ const routes: Routes = [
         path: 'practice/:id',
         loadChildren: () => import('./dest/practice/practice.module').then(m => m.PracticeModule),
     },
+    {
+        path: 'practice/:id/:notation',
+        loadChildren: () => import('./dest/practice/practice.module').then(m => m.PracticeModule),
+    },
 ];
 
 @NgModule({

@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { BoardManager } from '@app/types/board';
+import { BoardManager } from '@app/types/boardManager';
 import { Piece, PromotePieceType, PieceColor } from '@app/types/piece';
 import { BoardPosition, Coords } from '@app/types/boardPosition';
 
@@ -48,6 +48,8 @@ export class BoardComponent implements OnInit {
 
     @Output() public completed: EventEmitter<void> = new EventEmitter();
 
+    public showCompleted: boolean = true;
+
     constructor() {
         this.dragging = false;
         this.touchDragging = false;
@@ -58,6 +60,8 @@ export class BoardComponent implements OnInit {
 
         this.showPromotionSelect = false;
         this.promotionColor = 'white';
+
+        this.showCompleted = true;
     }
 
     public ngOnInit() {
@@ -425,5 +429,26 @@ export class BoardComponent implements OnInit {
         }
 
         this.activatePosition(position);
+    }
+
+    public handleBoardClick(clickEvent: MouseEvent) {
+        if (!this.boardManager) {
+            throw {
+                message: "Unexpected missing board",
+            };
+        }
+
+        if (this.showCompleted && this.boardManager.completed) {
+            this.showCompleted = false;
+            clickEvent.stopPropagation();
+            clickEvent.preventDefault();
+        }
+        
+        if (this.boardManager.incorrectPosition) {
+            this.boardManager.popBoardHistory(true, false);
+
+            clickEvent.stopPropagation();
+            clickEvent.preventDefault();
+        }
     }
 }

@@ -7,6 +7,8 @@ import { AppComponent } from './app.component';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
+import { ECOService } from '@app/services/eco.service';
+
 @NgModule({
     declarations: [
         AppComponent,
@@ -19,6 +21,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
         DragDropModule,
     ],
     providers: [
+        ECOService,
     ],
     bootstrap: [AppComponent]
 })

@@ -50,7 +50,7 @@ export class BoardManager {
     public movedToPosition?: BoardPosition;
     public movedFromPosition?: BoardPosition;
 
-    public readonly history: BoardHistory[];
+    public readonly boardHistory: BoardHistory[];
     public redoHistroy: BoardHistory[];
     
     public turnCount: number;
@@ -71,6 +71,8 @@ export class BoardManager {
 
     public completed: boolean;
 
+    public moveMadeCallback?: () => void;
+
     constructor(boardOrientation?: BoardOrientation) {
         this.completed = false;
 
@@ -82,7 +84,7 @@ export class BoardManager {
         this.whitePieces = [];
         this.blackPieces = [];
 
-        this.history = [];
+        this.boardHistory = [];
         this.redoHistroy = [];
         
         this.turnCount = 0;
@@ -98,9 +100,7 @@ export class BoardManager {
         this.autoBlack = false;
     }
 
-    public setNotation(notation: string): void {
-        this.notation = notation;
-
+    public static getNotationMoves(notation: string): string[] {
         const notationSplits = notation.split('.');
 
         const moves: string[] = [];
@@ -115,6 +115,14 @@ export class BoardManager {
                 moves.push(moveSplits[1]);
             }
         }
+
+        return moves;
+    }
+
+    public setNotation(notation: string): void {
+        this.notation = notation;
+
+        const moves: string[] = BoardManager.getNotationMoves(notation);
 
         console.log(moves);
 
@@ -403,12 +411,12 @@ export class BoardManager {
         return false;
     }
 
-    public popMoveHistroy(updateUI: boolean, pushBoardHistoryToRedo: boolean): BoardHistory | undefined {
+    public popBoardHistory(updateUI: boolean, pushBoardHistoryToRedo: boolean): BoardHistory | undefined {
         if (!this.turnCount) {
             return;
         }
 
-        const boardHistory: BoardHistory | undefined = this.history.pop();
+        const boardHistory: BoardHistory | undefined = this.boardHistory.pop();
 
         if (!boardHistory) {
             return;
@@ -456,9 +464,9 @@ export class BoardManager {
 
         // UI
         if (updateUI) {
-            if (this.history.length) {
-                this.movedFromPosition = this.history[this.history.length - 1].oldPosition;
-                this.movedToPosition = this.history[this.history.length - 1].newPosition;
+            if (this.boardHistory.length) {
+                this.movedFromPosition = this.boardHistory[this.boardHistory.length - 1].oldPosition;
+                this.movedToPosition = this.boardHistory[this.boardHistory.length - 1].newPosition;
             } else {
                 this.movedFromPosition = undefined;
                 this.movedToPosition = undefined;
@@ -484,6 +492,8 @@ export class BoardManager {
             this.hideMovementDots();
 
             this._updateGradeUI();
+
+            this.moveMadeCallback && this.moveMadeCallback();
         }
         // End UI
 
@@ -503,29 +513,60 @@ export class BoardManager {
             return;
         }
 
-        if (this.history[index].moveNotation !== this.notationMoves[index]) {
+        if (this.boardHistory[index].moveNotation !== this.notationMoves[index]) {
             return 'incorrect';
         }
 
         return 'correct';
     }
+
+    public getNotation(): string {
+        let notation = "";
+
+        let i = 1;
+
+        for (const boardHistory of this.boardHistory) {
+            if (boardHistory.movingPiece.color === 'white') {
+                if (i > 1) {
+                    notation += ' ';
+                }
+
+                notation += `${i}.${boardHistory.moveNotation}`;
+                i += 1;
+            } else {
+                notation += ` ${boardHistory.moveNotation}`;
+            }
+        }
+
+        return notation;
+    }
     
     private _gradeMoveNotations(): void {
-        if (!this.notationMoves || this.history.length !== this.notationMoves.length) {
+        if (!this.notationMoves || this.boardHistory.length !== this.notationMoves.length) {
             return;
         }
 
         for (let i = 0; i < this.notationMoves.length; i++) {
             const notationMove = this.notationMoves[i];
-            if (notationMove !== this.history[i].moveNotation) {
+            if (notationMove !== this.boardHistory[i].moveNotation) {
                 return;
             }
         }
 
         this.completed = true;
+
+        // TODO: handle this with a callback or something
+        this.autoBlack = false;
+        this.autoWhite = false;
     }
 
     private _updateGradeUI(): void {
+        if (!this.notationMoves || this.boardHistory.length > this.notationMoves.length) {
+            this.correctPosition = undefined;
+            this.incorrectPosition = undefined;
+            return;
+        }
+
         // Avoid updating grade UI if both sides are computer and not human
         if (this.autoWhite && this.autoBlack) {
             this.correctPosition = undefined;
@@ -533,19 +574,20 @@ export class BoardManager {
             return;
         }
 
-        let index = this.history.length - 1;
+        let index = this.boardHistory.length - 1;
 
-        let lastBoardHistory: BoardHistory | undefined = this.history[index];
+        let lastBoardHistory: BoardHistory | undefined = this.boardHistory[index];
 
-        while(index > 0) {
+        while(index >= 0) {
             if ((lastBoardHistory.movingPiece.color === 'white' && this.autoWhite) || (lastBoardHistory.movingPiece.color === 'black' && this.autoBlack)) {
                 index -= 1;
+
                 if (index < 0) {
                     lastBoardHistory = undefined;
                     break;
                 }
 
-                lastBoardHistory = this.history[index];
+                lastBoardHistory = this.boardHistory[index];
                 continue;
             }
 
@@ -587,7 +629,7 @@ export class BoardManager {
             this.turn = 'white';
         }
 
-        this.history.push(boardHistory);
+        this.boardHistory.push(boardHistory);
 
         this.turnCount += 1;
 
@@ -596,6 +638,8 @@ export class BoardManager {
             this.movedToPosition = boardHistory.newPosition;
 
             this._updateGradeUI();
+
+            this.moveMadeCallback && this.moveMadeCallback();
         }
 
         if (resetRedoHistory) {
@@ -674,7 +718,7 @@ export class BoardManager {
         }
         // End UI before move
         
-        this.history.push(boardHistory);
+        this.boardHistory.push(boardHistory);
 
         // UI after move
         if (updateUI) {
@@ -807,13 +851,13 @@ export class BoardManager {
             if (boardHistory?.moveNotation !== notation) {
                 console.error("Mismatch notations", boardHistory?.moveNotation, notation);
                 if (boardHistory) {
-                    this.popMoveHistroy(true, false);
+                    this.popBoardHistory(true, false);
                     boardHistory = undefined;
                 }
             }
 
             if (boardHistory) {
-                this.popMoveHistroy(true, false);
+                this.popBoardHistory(true, false);
                 return filteredPieces[0].moveToPosition(moveToPosition, true, true);
             }
         }
