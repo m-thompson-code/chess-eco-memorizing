@@ -19,11 +19,17 @@ export class TestComponent implements OnInit {
 
     public ecoOpenings: EcoOpening[] = [];
 
+    public minMoves: number = 0;
+    public maxMoves: number = 0;
+
     constructor(private router: Router, private ecoService: ECOService) {
         this.inputText = "";
     }
 
     public ngOnInit(): void {
+        this.minMoves = 3;
+        this.maxMoves = 4;
+
         console.log(this.ecoService.ecoOpenings);
         const mainBoardManager =  new BoardManager();
         this.boardManager = mainBoardManager;
@@ -34,14 +40,14 @@ export class TestComponent implements OnInit {
         //     black: true,
         // });
 
-        this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation('');
+        this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation('', {maxMoves: this.maxMoves, minMoves: this.minMoves}, 'whiteMoves');
 
         this.boardManagers = [];
         console.log(this.boardManagers);
 
         this.boardManager.moveMadeCallback = () => {
             if (this.boardManager) {
-                this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation(this.boardManager.getNotation()) || [];
+                this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation(this.boardManager.getNotation(), {maxMoves: this.maxMoves, minMoves: this.minMoves}, 'whiteMoves') || [];
             }
         };
 
@@ -131,15 +137,31 @@ export class TestComponent implements OnInit {
         }
     }
     
-    public updateValue(inputChangeEvent: any) {
+    public updateValue(inputChangeEvent: any): void {
         this.inputText = inputChangeEvent.target.value;
+    }
+       
+    public updateMinMoves(inputChangeEvent: any): void {
+        this.minMoves = +inputChangeEvent.target.value;
+
+        if (this.boardManager) {
+            this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation(this.boardManager.getNotation(), {maxMoves: this.maxMoves, minMoves: this.minMoves}, 'whiteMoves') || [];
+        }
+    }
+    
+    public updateMaxMoves(inputChangeEvent: any): void {
+        this.maxMoves = +inputChangeEvent.target.value;
+
+        if (this.boardManager) {
+            this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation(this.boardManager.getNotation(), {maxMoves: this.maxMoves, minMoves: this.minMoves}, 'whiteMoves') || [];
+        }
     }
 
     public practice(): Promise<boolean> {
         const queryNotation = (this.boardManager?.getNotation() || '').replace(/ /g, '_').replace(/\./g, 'dot');
-        return this.router.navigate(['practice', 0, queryNotation]);
+        return this.router.navigate(['practice', 0, queryNotation, this.minMoves || 0, this.maxMoves || 0]);
     }
 
-    ngOnDestroy() {
+    public ngOnDestroy(): void {
     }
 }

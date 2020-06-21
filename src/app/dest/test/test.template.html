@@ -34,16 +34,34 @@
             </div>
         </div>
         
-        <div>
+        <div [style.margin]="'12px'">
             Turn: {{ boardManager.turn }} Turn count: {{ boardManager.turnCount }} Openings: {{ ecoOpenings.length }}
         </div>
+        
+        <div class="flex-container">
+            <mat-form-field>
+                 <mat-label>Min Moves</mat-label>
+                 <input matInput placeholder="Ex. 2 (white and black)" [value]="minMoves" (change)="updateMinMoves($event)">
+             </mat-form-field>
+         </div>
 
-        <div>
-           <input [value]="inputText" (change)="updateValue($event)">
-           <a (click)="boardManager && boardManager.moveUsingNotation(inputText); inputText = ''">Move</a>
+        <div class="flex-container">
+            <mat-form-field>
+                 <mat-label>Max Moves</mat-label>
+                 <input matInput placeholder="Ex. 4 (white and black)" [value]="maxMoves" (change)="updateMaxMoves($event)">
+             </mat-form-field>
+         </div>
+
+        <div class="flex-container">
+           <mat-form-field>
+                <mat-label>Move by notation</mat-label>
+                <input matInput placeholder="Ex. e4" [value]="inputText" (change)="updateValue($event)">
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="boardManager && boardManager.moveUsingNotation(inputText); inputText = ''">Move</button>
         </div>
         
-        <div>
+        <div [style.margin]="'12px'">
             <a (click)="boardManager && boardManager.flipBoardOrientation(true)">Flip board</a>
         </div>
     </ng-container>

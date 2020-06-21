@@ -61,14 +61,23 @@ export class ECOService {
         }
     }
 
-    public getEcoOpeningsByNotation(notation: string, moves?: number, sortBy?: 'text' | 'notation' | 'whiteMoves' | 'blackMoves'): EcoOpening[] {
+    public getEcoOpeningsByNotation(notation: string, moveCountFilter?: {maxMoves?: number, minMoves?: number}, sortBy?: 'text' | 'notation' | 'whiteMoves' | 'blackMoves'): EcoOpening[] {
+        console.log(notation, moveCountFilter, sortBy);
         const ecoOpenings: EcoOpening[] = [];
 
         for (const ecoOpening of this.ecoOpenings) {
             if (ecoOpening.notation.startsWith(notation)) {
-                if (moves) {
-                    if (ecoOpening.whiteMoves + ecoOpening.blackMoves > moves) {
-                        continue;
+                if (moveCountFilter) {
+                    if (moveCountFilter.maxMoves) {
+                        if (ecoOpening.whiteMoves + ecoOpening.blackMoves > moveCountFilter.maxMoves) {
+                            continue;
+                        }
+                    }
+
+                    if (moveCountFilter.minMoves) {
+                        if (ecoOpening.whiteMoves + ecoOpening.blackMoves < moveCountFilter.minMoves) {
+                            continue;
+                        }
                     }
                 }
 

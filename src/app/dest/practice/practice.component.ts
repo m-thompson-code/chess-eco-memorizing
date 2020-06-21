@@ -19,6 +19,8 @@ export class PracticeComponent implements OnInit, OnDestroy {
     title?: string;
     notation?: string;
     queryNotation?: string;
+    minMoves: number = 0;
+    maxMoves: number = 0;
 
     doInc: boolean = false;
 
@@ -34,8 +36,10 @@ export class PracticeComponent implements OnInit, OnDestroy {
 
             this.index = +val.id;
             this.queryNotation = (val.notation || '').replace(/_/g, ' ').replace(/dot/g, '.');
+            this.minMoves = +val.minMoves || +val.minmoves || 0;
+            this.maxMoves = +val.maxMoves || +val.maxmoves || 0;
 
-            this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation(this.queryNotation || '');
+            this.ecoOpenings = this.ecoService.getEcoOpeningsByNotation(this.queryNotation || '', {maxMoves: this.maxMoves, minMoves: this.minMoves}, 'whiteMoves') || [];
 
             const opening = this.ecoOpenings[this.index];
             console.log(this.ecoOpenings);
@@ -86,16 +90,13 @@ export class PracticeComponent implements OnInit, OnDestroy {
                 this.index = Math.floor(Math.random() * this.ecoOpenings.length);
             }
         }
-
+        console.log(this.index);
         this.index = this.index % this.ecoOpenings.length;
+        console.log(this.index);
 
-        if (this.queryNotation) {
-            const q = this.queryNotation.replace(/ /g, '_').replace(/\./g, 'dot');
-
-            return this.router.navigate(['/practice', this.index, q]);
-        } else {
-            return this.router.navigate(['/practice', this.index]);
-        }
+        const q = (this.queryNotation || "").replace(/ /g, '_').replace(/\./g, 'dot');
+        console.log('/practice', q, this.index, this.minMoves, this.maxMoves);
+        return this.router.navigate(['/practice', this.index, q, this.minMoves, this.maxMoves]);
     }
 
     public ngOnDestroy(): void {
